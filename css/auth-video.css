@@ -1,0 +1,171 @@
+/* ========================================================
+   FABLEFLOW AUTHENTICATION VIDEO COMPANION
+   Clean, Responsive Video Integration for Login & Signup
+   ======================================================== */
+
+/* Scoped Two-Column Modal Window */
+#auth-modal .auth-modal-window {
+  max-width: 960px;
+  width: 95vw;
+  max-height: 90vh;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(140, 199, 162, 0.12);
+}
+
+/* Floating Corner Close Button */
+.auth-modal-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 50;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.38);
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.auth-modal-close-btn:hover {
+  background: var(--color-accent);
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+/* Two-Column Flex Layout */
+.auth-modal-layout {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  min-height: 590px;
+  overflow: hidden;
+}
+
+/* LEFT COLUMN: Existing Authentication Form */
+.auth-form-column {
+  flex: 1 1 50%;
+  max-width: 50%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  border-right: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+}
+
+.auth-forms-scroll-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* RIGHT COLUMN: Video Companion Stage */
+.auth-video-column {
+  flex: 1 1 50%;
+  max-width: 50%;
+  position: relative;
+  background: radial-gradient(circle at 50% 50%, #173224 0%, #0d1e16 65%, #06100b 100%);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+/* Video Viewport Container */
+.auth-video-viewport {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: #0b1711;
+}
+
+/* HTML5 Video Element */
+.auth-studying-video {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+  pointer-events: none;
+  background-color: transparent;
+  outline: none;
+}
+
+/* Subtle Vignette Overlay to blend video edges naturally */
+.auth-video-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 45px rgba(6, 16, 11, 0.65);
+  z-index: 5;
+}
+
+/* ========================================================
+   RESPONSIVE LAYOUTS
+   ======================================================== */
+@media (max-width: 860px) {
+  #auth-modal .auth-modal-window {
+    max-width: 740px;
+  }
+  .auth-modal-layout {
+    min-height: 520px;
+  }
+}
+
+@media (max-width: 680px) {
+  #auth-modal .auth-modal-window {
+    max-width: 480px;
+    width: 95vw;
+    max-height: 94vh;
+    overflow-y: auto;
+  }
+  .auth-modal-layout {
+    flex-direction: column;
+    min-height: auto;
+  }
+  .auth-video-column {
+    flex: none;
+    max-width: 100%;
+    width: 100%;
+    height: 230px;
+    order: -1; /* Places the studying video neatly above the form */
+    border-bottom: 1px solid var(--border-color);
+    border-right: none;
+  }
+  .auth-form-column {
+    flex: none;
+    max-width: 100%;
+    width: 100%;
+    border-right: none;
+    overflow-y: visible;
+  }
+  .auth-studying-video {
+    object-fit: contain;
+    object-position: center center;
+  }
+  .auth-modal-close-btn {
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.45);
+  }
+}

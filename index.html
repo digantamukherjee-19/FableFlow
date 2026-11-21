@@ -17,6 +17,7 @@
   <!-- Core & Responsive Styles -->
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/auth-video.css">
 </head>
 <body>
 
@@ -806,22 +807,27 @@
          AUTHENTICATION & ACCESSIBILITY ONBOARDING MODAL
          ======================================================== -->
     <div class="modal-overlay" id="auth-modal">
-      <div class="modal-window">
-        <!-- Modal Branding Header (Official Logo only, no text beside or inside) -->
-        <div class="modal-brand-header">
-          <img src="assets/icons/Magical Fountain Pen and Open Book.webp" alt="FableFlow" class="auth-brand-logo" />
-          <button id="auth-modal-close" class="modal-close-btn" title="Close" aria-label="Close dialog">✕</button>
-        </div>
+      <div class="modal-window auth-modal-window" id="auth-modal-window">
+        <!-- Modal Close Button -->
+        <button id="auth-modal-close" class="modal-close-btn auth-modal-close-btn" title="Close" aria-label="Close dialog">✕</button>
 
-        <!-- Mode Tabs -->
-        <div style="display: flex; border-bottom: 2px solid var(--border-color);">
-          <button id="auth-tab-login" class="nav-tab-item active" style="flex: 1; border-radius: 0; padding: 14px; text-align: center; justify-content: center;">Sign In</button>
-          <button id="auth-tab-register" class="nav-tab-item" style="flex: 1; border-radius: 0; padding: 14px; text-align: center; justify-content: center;">Create Account</button>
-        </div>
+        <div class="auth-modal-layout">
+          <!-- LEFT COLUMN: Authentication Forms -->
+          <div class="auth-form-column">
+            <!-- Modal Branding Header (Official Logo only, no text beside or inside) -->
+            <div class="modal-brand-header">
+              <img src="assets/icons/Magical Fountain Pen and Open Book.webp" alt="FableFlow" class="auth-brand-logo" />
+            </div>
 
-        <div style="padding: 24px;">
-          <div id="auth-error-msg" style="display: none; padding: 10px; border-radius: 8px; background-color: var(--color-accent); color: var(--color-primary); font-size: 0.8rem; margin-bottom: 14px; font-weight: 700;"></div>
-          <div id="auth-success-msg" style="display: none; padding: 10px; border-radius: 8px; background-color: var(--bg-elevated); color: var(--color-primary); font-size: 0.8rem; margin-bottom: 14px; font-weight: 700;"></div>
+            <!-- Mode Tabs -->
+            <div style="display: flex; border-bottom: 2px solid var(--border-color);">
+              <button id="auth-tab-login" class="nav-tab-item active" style="flex: 1; border-radius: 0; padding: 14px; text-align: center; justify-content: center;">Sign In</button>
+              <button id="auth-tab-register" class="nav-tab-item" style="flex: 1; border-radius: 0; padding: 14px; text-align: center; justify-content: center;">Create Account</button>
+            </div>
+
+            <div class="auth-forms-scroll-wrap">
+              <div id="auth-error-msg" style="display: none; padding: 10px; border-radius: 8px; background-color: var(--color-accent); color: var(--color-primary); font-size: 0.8rem; margin-bottom: 14px; font-weight: 700;"></div>
+              <div id="auth-success-msg" style="display: none; padding: 10px; border-radius: 8px; background-color: var(--bg-elevated); color: var(--color-primary); font-size: 0.8rem; margin-bottom: 14px; font-weight: 700;"></div>
 
           <!-- Login Form (No autofill, empty credentials) -->
           <form id="auth-login-form" autocomplete="off">
@@ -934,7 +940,29 @@
           </form>
         </div>
       </div>
+
+      <!-- RIGHT COLUMN: Studying Video Visual -->
+      <div class="auth-video-column" id="auth-video-column" aria-hidden="true">
+        <div class="auth-video-viewport" id="auth-video-viewport">
+          <video 
+            id="auth-studying-video" 
+            class="auth-studying-video" 
+            autoplay 
+            loop 
+            muted 
+            playsinline 
+            preload="auto"
+            tabindex="-1"
+            aria-label="Student studying quietly at desk">
+            <source src="assets/gemini_generated_video_c824c582.mp4" type="video/mp4" />
+            Your browser does not support HTML5 video.
+          </video>
+          <div class="auth-video-vignette"></div>
+        </div>
+      </div>
     </div>
+  </div>
+</div>
 
     <!-- Email verification prompt after signup -->
     <div class="modal-overlay" id="email-confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="email-confirmation-title">
@@ -1025,6 +1053,7 @@
   <script src="js/backend.js"></script>
   <script src="js/accessibility.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/auth-video.js"></script>
   <script src="js/navigation.js"></script>
   <script src="js/stories.js"></script>
   <script src="js/editor.js"></script>
