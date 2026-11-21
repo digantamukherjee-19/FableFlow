@@ -1,31 +1,80 @@
 /* ========================================================
-   FABLEFLOW RESPONSIVE MEDIA QUERIES
+   FABLEFLOW RESPONSIVE ENGINE
+   Comprehensive mobile responsiveness across all viewports:
+   - 320px–375px (Small mobile phones)
+   - 375px–430px (Standard mobile phones)
+   - 430px–768px (Large phones & phablets)
+   - 768px–1024px (Tablets)
+   - 1024px–1440px (Laptops & desktop monitors)
    ======================================================== */
 
+/* Universal Mobile Overflow & Box-Sizing Protection */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  position: relative;
+  -webkit-text-size-adjust: 100%;
+}
+
+#app, .main-content {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+img, video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ========================================================
+   1. LAPTOPS & DESKTOP (max-width: 1200px)
+   ======================================================== */
+@media (max-width: 1200px) {
+  .story-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+}
+
+/* ========================================================
+   2. TABLET LANDSCAPE & SMALL LAPTOPS (max-width: 1024px)
+   ======================================================== */
 @media (max-width: 1024px) {
   .hero-banner {
-    padding: 22px 20px;
+    padding: 24px 20px;
   }
 
   .editor-layout {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .community-layout {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .story-detail-grid {
     grid-template-columns: 1fr;
     text-align: center;
+    gap: 20px;
   }
 
   .story-detail-cover {
-    max-width: 200px;
+    max-width: 220px;
     margin: 0 auto;
   }
 }
 
+/* ========================================================
+   3. TABLETS & LARGE MOBILE (max-width: 920px)
+   ======================================================== */
 @media (max-width: 920px) {
   .nav-tabs {
     display: none !important;
@@ -36,28 +85,23 @@
   }
 
   .nav-search-container {
-    max-width: 280px;
+    max-width: 240px;
     flex: 1 1 auto;
   }
 }
 
+/* ========================================================
+   4. TABLETS PORTRAIT (max-width: 768px)
+   ======================================================== */
 @media (max-width: 768px) {
-  .nav-tabs {
-    display: none !important;
-  }
-
   .brand-logo-img {
-    height: 40px !important;
-    max-height: 40px !important;
+    height: 38px !important;
+    max-height: 38px !important;
   }
 
   .auth-brand-logo {
-    height: 52px !important;
-    max-height: 52px !important;
-  }
-
-  .mobile-menu-btn {
-    display: block;
+    height: 48px !important;
+    max-height: 48px !important;
   }
 
   .btn-ai-pill span {
@@ -70,6 +114,7 @@
 
   .hero-title {
     font-size: 1.6rem;
+    line-height: 1.3;
   }
 
   .story-grid {
@@ -78,8 +123,7 @@
   }
 
   .main-content {
-    padding-left: 14px;
-    padding-right: 14px;
+    padding: 12px 14px 32px;
   }
 
   .ai-assistant-drawer {
@@ -95,7 +139,7 @@
     border-radius: var(--radius-lg);
   }
 
-  /* Stabilized Continue Reading Card on Tablets */
+  /* Stabilized Continue Reading Card */
   .continue-reading-card {
     height: 80px !important;
     min-height: 80px !important;
@@ -107,8 +151,23 @@
     padding: 0 12px !important;
     font-size: 12px !important;
   }
+
+  .reader-toolbar {
+    padding: 10px 12px;
+  }
+
+  .reader-prose-container {
+    padding: 14px 16px;
+  }
+
+  .selection-ai-popover {
+    max-width: calc(100vw - 32px);
+  }
 }
 
+/* ========================================================
+   5. PHABLETS & LARGE MOBILE PHONES (max-width: 640px)
+   ======================================================== */
 @media (max-width: 640px) {
   .nav-container {
     padding: 0 10px !important;
@@ -116,29 +175,29 @@
   }
 
   .nav-search-container {
-    max-width: 190px !important;
-    min-width: 110px !important;
+    max-width: 170px !important;
+    min-width: 95px !important;
     margin: 0 4px !important;
   }
 
   .nav-search-dropdown {
     position: fixed !important;
-    top: calc(var(--nav-height) + 6px) !important;
-    left: 10px !important;
-    right: 10px !important;
+    top: calc(var(--nav-height) + 4px) !important;
+    left: 8px !important;
+    right: 8px !important;
     width: auto !important;
     max-width: none !important;
-    max-height: 70vh !important;
+    max-height: 68vh !important;
   }
 
   .floating-ai-trigger {
-    bottom: 20px;
-    right: 20px;
-    width: 48px;
-    height: 48px;
+    bottom: 16px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
   }
 
-  /* Stabilized Continue Reading Card on Mobile Screens */
+  /* Stabilized Continue Reading Card on Mobile */
   .continue-reading-card {
     height: 84px !important;
     min-height: 84px !important;
@@ -169,70 +228,360 @@
     padding: 0 10px !important;
     font-size: 11px !important;
   }
+
+  /* Learning Hub Subtabs Horizontal Scrolling */
+  #view-learning > div:first-child > div:last-child {
+    width: 100%;
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 4px;
+    gap: 6px;
+  }
+
+  #view-learning .genre-pill {
+    flex-shrink: 0;
+    font-size: 0.76rem;
+    padding: 6px 10px;
+  }
+
+  /* Community Layout Mobile */
+  .chat-box {
+    height: 420px;
+  }
+
+  .chat-bubble {
+    max-width: 88%;
+  }
+
+  /* Post Editor Mobile */
+  .editor-textarea {
+    min-height: 320px;
+    font-size: 16px;
+  }
 }
 
+/* ========================================================
+   6. STANDARD MOBILE PHONES (max-width: 480px)
+   Includes 375px–430px (iPhone SE, 13, 14, 15 Pro, Pixel, Galaxy)
+   ======================================================== */
 @media (max-width: 480px) {
-  .nav-search-container {
-    max-width: 140px !important;
-    min-width: 85px !important;
-  }
-
-  .nav-search-bar {
+  .nav-container {
     padding: 0 8px !important;
-    height: 34px !important;
-  }
-
-  .nav-search-icon {
-    margin-right: 4px !important;
-    font-size: 0.82rem !important;
-  }
-
-  .nav-search-input {
-    font-size: 0.75rem !important;
-  }
-
-  .btn-auth-nav {
-    padding: 4px 8px !important;
-    font-size: 0.75rem !important;
+    gap: 4px !important;
   }
 
   .brand-logo-img {
-    height: 36px !important;
-    max-height: 36px !important;
+    height: 34px !important;
+    max-height: 34px !important;
   }
 
   .auth-brand-logo {
-    height: 44px !important;
-    max-height: 44px !important;
+    height: 42px !important;
+    max-height: 42px !important;
+  }
+
+  .nav-search-container {
+    max-width: 125px !important;
+    min-width: 78px !important;
+  }
+
+  .nav-search-bar {
+    padding: 0 6px !important;
+    height: 32px !important;
+  }
+
+  .nav-search-icon {
+    margin-right: 3px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .nav-search-input {
+    font-size: 0.74rem !important;
+  }
+
+  /* In mobile top bar, hide duplicate Sign Up and Settings icons to prevent navbar overflow */
+  #nav-signup-btn {
+    display: none !important;
+  }
+
+  #nav-settings-btn {
+    display: none !important;
+  }
+
+  .btn-auth-signin {
+    padding: 4px 8px !important;
+    font-size: 0.74rem !important;
+    height: 32px !important;
+    white-space: nowrap !important;
+  }
+
+  .icon-btn {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 1rem !important;
+  }
+
+  .mobile-menu-btn {
+    font-size: 1.25rem !important;
+  }
+
+  .user-profile-badge {
+    padding: 2px 6px 2px 2px !important;
+    gap: 4px !important;
+  }
+
+  .user-avatar-img {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .user-name-text {
+    max-width: 55px !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* Hero Banner */
+  .hero-banner {
+    padding: 16px 12px;
   }
 
   .hero-title {
-    font-size: 1.45rem;
+    font-size: 1.35rem;
+    line-height: 1.25;
   }
 
-  .hero-banner {
-    padding: 18px 14px;
+  .hero-lead {
+    font-size: 0.85rem;
+    margin-bottom: 14px;
   }
 
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .hero-actions .btn-primary,
+  .hero-actions .btn-secondary {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  /* Story Catalog Grid */
   .story-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .book-card-body {
+    padding: 8px 10px !important;
   }
 
   .book-card-title {
-    font-size: 0.8rem;
+    font-size: 0.82rem !important;
+  }
+
+  .book-card-author {
+    font-size: 0.72rem !important;
   }
 
   .book-card-desc {
-    display: none;
+    display: none !important;
+  }
+
+  /* Story Reader View */
+  .reader-toolbar {
+    padding: 8px 10px !important;
+    font-size: 0.8rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .reader-prose-container {
+    padding: 12px 14px !important;
+  }
+
+  .tts-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+
+  .tts-controls {
+    gap: 6px !important;
+  }
+
+  .btn-tts {
+    padding: 6px 10px !important;
+    font-size: 0.76rem !important;
+    min-height: 38px !important;
+  }
+
+  /* Learning Hub - Pomodoro */
+  .pomodoro-dial {
+    width: 190px !important;
+    height: 190px !important;
+    margin: 14px auto !important;
+  }
+
+  .pomodoro-digits {
+    font-size: 2.35rem !important;
+  }
+
+  .pomodoro-preset-btn,
+  .focus-activity-btn {
+    padding: 5px 12px !important;
+    font-size: 0.74rem !important;
+  }
+
+  #pomodoro-start-btn,
+  #pomodoro-pause-btn,
+  #pomodoro-resume-btn,
+  #pomodoro-reset-btn {
+    padding: 10px 20px !important;
+    font-size: 0.9rem !important;
+    min-height: 44px !important;
+  }
+
+  /* Vocabulary Corner */
+  .wotd-card {
+    padding: 16px 14px !important;
   }
 
   .wotd-title {
-    font-size: 1.55rem;
+    font-size: 1.55rem !important;
+  }
+
+  .wotd-meaning-box {
+    padding: 12px 14px !important;
+  }
+
+  .wotd-meaning {
+    font-size: 0.95rem !important;
+  }
+
+  .wotd-example {
+    font-size: 0.82rem !important;
   }
 
   .quiz-option-btn {
-    font-size: 0.8rem;
-    padding: 10px 12px;
+    font-size: 0.82rem !important;
+    padding: 12px 14px !important;
+    min-height: 44px !important;
+  }
+
+  /* Post Studio Toolbar */
+  .editor-toolbar {
+    padding: 6px 8px !important;
+    gap: 4px !important;
+  }
+
+  .editor-toolbar-btn {
+    padding: 5px 8px !important;
+    font-size: 0.76rem !important;
+    min-height: 38px !important;
+  }
+
+  /* Mobile Drawer Styling */
+  .mobile-nav-drawer {
+    padding: 14px 16px 18px !important;
+  }
+
+  .mobile-nav-link {
+    padding: 12px 14px !important;
+    min-height: 44px !important;
+  }
+}
+
+/* ========================================================
+   7. SMALL MOBILE PHONES (max-width: 360px)
+   Includes 320px–360px (iPhone SE 1st Gen, Galaxy Fold)
+   ======================================================== */
+@media (max-width: 360px) {
+  .nav-container {
+    padding: 0 4px !important;
+    gap: 3px !important;
+  }
+
+  .brand-logo-img {
+    height: 28px !important;
+    max-height: 28px !important;
+  }
+
+  .nav-search-container {
+    max-width: 95px !important;
+    min-width: 65px !important;
+  }
+
+  .nav-search-bar {
+    height: 30px !important;
+    padding: 0 4px !important;
+  }
+
+  .nav-search-icon {
+    font-size: 0.72rem !important;
+    margin-right: 2px !important;
+  }
+
+  .nav-search-input {
+    font-size: 0.7rem !important;
+  }
+
+  .btn-auth-signin {
+    padding: 3px 6px !important;
+    font-size: 0.7rem !important;
+    height: 30px !important;
+  }
+
+  .icon-btn {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 0.95rem !important;
+  }
+
+  .main-content {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .hero-banner {
+    padding: 14px 10px !important;
+  }
+
+  .hero-title {
+    font-size: 1.25rem !important;
+  }
+
+  .story-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .book-card-body {
+    padding: 6px 8px !important;
+  }
+
+  .book-card-title {
+    font-size: 0.76rem !important;
+  }
+
+  .book-card-author {
+    font-size: 0.68rem !important;
+  }
+
+  .pomodoro-dial {
+    width: 175px !important;
+    height: 175px !important;
+  }
+
+  .pomodoro-digits {
+    font-size: 2.1rem !important;
+  }
+
+  .wotd-title {
+    font-size: 1.35rem !important;
   }
 }

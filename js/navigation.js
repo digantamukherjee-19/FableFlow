@@ -90,7 +90,9 @@ FableFlow.Navigation = (function() {
 
     // Close mobile drawer if open
     const drawer = document.getElementById('mobile-nav-drawer');
+    const mobileBtn = document.getElementById('mobile-menu-toggle-btn');
     if (drawer) drawer.classList.remove('open');
+    if (mobileBtn) mobileBtn.setAttribute('aria-expanded', 'false');
 
     // Scroll to top
     if (typeof window.scrollTo === 'function') {
@@ -156,8 +158,26 @@ FableFlow.Navigation = (function() {
     const mobileBtn = document.getElementById('mobile-menu-toggle-btn');
     const drawer = document.getElementById('mobile-nav-drawer');
     if (mobileBtn && drawer) {
-      mobileBtn.addEventListener('click', () => {
-        drawer.classList.toggle('open');
+      mobileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = drawer.classList.toggle('open');
+        mobileBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+
+      // Close mobile drawer when tapping outside
+      document.addEventListener('click', (e) => {
+        if (drawer.classList.contains('open') && !drawer.contains(e.target) && !mobileBtn.contains(e.target)) {
+          drawer.classList.remove('open');
+          mobileBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      // Close mobile drawer on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && drawer.classList.contains('open')) {
+          drawer.classList.remove('open');
+          mobileBtn.setAttribute('aria-expanded', 'false');
+        }
       });
     }
 

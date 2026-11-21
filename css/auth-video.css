@@ -138,6 +138,7 @@
     width: 95vw;
     max-height: 94vh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .auth-modal-layout {
     flex-direction: column;
@@ -147,7 +148,7 @@
     flex: none;
     max-width: 100%;
     width: 100%;
-    height: 230px;
+    height: 215px;
     order: -1; /* Places the studying video neatly above the form */
     border-bottom: 1px solid var(--border-color);
     border-right: none;
@@ -159,6 +160,9 @@
     border-right: none;
     overflow-y: visible;
   }
+  .auth-forms-scroll-wrap {
+    padding: 18px 16px;
+  }
   .auth-studying-video {
     object-fit: contain;
     object-position: center center;
@@ -166,6 +170,50 @@
   .auth-modal-close-btn {
     top: 10px;
     right: 10px;
-    background: rgba(0, 0, 0, 0.45);
+    width: 36px;
+    height: 36px;
+    background: rgba(0, 0, 0, 0.55);
+  }
+}
+
+@media (max-width: 520px) {
+  #auth-modal .auth-modal-window {
+    width: 96vw;
+    max-height: 96vh;
+    border-radius: var(--radius-md);
+  }
+  .auth-video-column {
+    height: 195px;
+  }
+  .auth-forms-scroll-wrap {
+    padding: 14px 12px;
+  }
+  /* Single-column input fields for mobile readability */
+  #auth-register-form [style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .auth-form-column .search-input {
+    min-height: 42px;
+    font-size: 16px; /* Prevents auto-zoom on mobile safari */
+  }
+  .auth-form-column .btn-primary,
+  .auth-form-column .btn-guest {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 360px) {
+  #auth-modal .auth-modal-window {
+    width: 98vw;
+  }
+  .auth-video-column {
+    height: 170px;
+  }
+  .auth-forms-scroll-wrap {
+    padding: 12px 8px;
+  }
+  .auth-welcome-msg {
+    font-size: 0.76rem !important;
   }
 }

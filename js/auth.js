@@ -247,19 +247,62 @@ FableFlow.Auth = (function() {
     const userBadge = document.getElementById('nav-user-badge');
     const userNameSpan = document.getElementById('nav-username');
     const userAvatarImg = document.getElementById('nav-user-avatar');
+    const mobileDrawerAuth = document.getElementById('mobile-drawer-auth');
 
     if (!currentUser) {
       if (authActions) authActions.style.display = 'flex';
       if (userBadge) userBadge.style.display = 'none';
+      if (mobileDrawerAuth) {
+        mobileDrawerAuth.innerHTML = `
+          <button type="button" class="btn-primary" id="mobile-drawer-signin-btn" style="flex: 1; padding: 10px; font-size: 0.85rem;">Sign In</button>
+          <button type="button" class="btn-secondary" id="mobile-drawer-signup-btn" style="flex: 1; padding: 10px; font-size: 0.85rem;">Sign Up</button>
+        `;
+        document.getElementById('mobile-drawer-signin-btn')?.addEventListener('click', () => {
+          const drawer = document.getElementById('mobile-nav-drawer');
+          if (drawer) drawer.classList.remove('open');
+          openModal('login');
+        });
+        document.getElementById('mobile-drawer-signup-btn')?.addEventListener('click', () => {
+          const drawer = document.getElementById('mobile-nav-drawer');
+          if (drawer) drawer.classList.remove('open');
+          openModal('register');
+        });
+      }
       return;
     }
 
     if (currentUser.isGuest) {
       if (authActions) authActions.style.display = 'flex';
       if (userBadge) userBadge.title = 'Browsing as Guest (Click to view Settings)';
+      if (mobileDrawerAuth) {
+        mobileDrawerAuth.innerHTML = `
+          <button type="button" class="btn-primary" id="mobile-drawer-signin-btn" style="flex: 1; padding: 10px; font-size: 0.85rem;">Sign In</button>
+          <button type="button" class="btn-secondary" id="mobile-drawer-signup-btn" style="flex: 1; padding: 10px; font-size: 0.85rem;">Sign Up</button>
+        `;
+        document.getElementById('mobile-drawer-signin-btn')?.addEventListener('click', () => {
+          const drawer = document.getElementById('mobile-nav-drawer');
+          if (drawer) drawer.classList.remove('open');
+          openModal('login');
+        });
+        document.getElementById('mobile-drawer-signup-btn')?.addEventListener('click', () => {
+          const drawer = document.getElementById('mobile-nav-drawer');
+          if (drawer) drawer.classList.remove('open');
+          openModal('register');
+        });
+      }
     } else {
       if (authActions) authActions.style.display = 'none';
       if (userBadge) userBadge.title = `Signed in as ${currentUser.username} (Go to Dashboard)`;
+      if (mobileDrawerAuth) {
+        mobileDrawerAuth.innerHTML = `
+          <button type="button" class="btn-secondary" id="mobile-drawer-signout-btn" style="width: 100%; padding: 10px; font-size: 0.85rem;">Sign Out (${currentUser.username})</button>
+        `;
+        document.getElementById('mobile-drawer-signout-btn')?.addEventListener('click', () => {
+          const drawer = document.getElementById('mobile-nav-drawer');
+          if (drawer) drawer.classList.remove('open');
+          logout();
+        });
+      }
     }
     if (userBadge) userBadge.style.display = 'flex';
     if (userNameSpan) userNameSpan.textContent = currentUser.username;
@@ -329,6 +372,19 @@ FableFlow.Auth = (function() {
     const signupBtn = document.getElementById('nav-signup-btn');
     if (signinBtn) signinBtn.addEventListener('click', () => openModal('login'));
     if (signupBtn) signupBtn.addEventListener('click', () => openModal('register'));
+
+    const mobileSigninBtn = document.getElementById('mobile-drawer-signin-btn');
+    const mobileSignupBtn = document.getElementById('mobile-drawer-signup-btn');
+    if (mobileSigninBtn) mobileSigninBtn.addEventListener('click', () => {
+      const drawer = document.getElementById('mobile-nav-drawer');
+      if (drawer) drawer.classList.remove('open');
+      openModal('login');
+    });
+    if (mobileSignupBtn) mobileSignupBtn.addEventListener('click', () => {
+      const drawer = document.getElementById('mobile-nav-drawer');
+      if (drawer) drawer.classList.remove('open');
+      openModal('register');
+    });
 
     const closeBtn = document.getElementById('auth-modal-close');
     if (closeBtn) closeBtn.addEventListener('click', closeModal);

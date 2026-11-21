@@ -99,7 +99,7 @@
           </div>
 
           <!-- Mobile Hamburger -->
-          <button class="icon-btn mobile-menu-btn" id="mobile-menu-toggle-btn" aria-label="Open mobile menu">
+          <button class="icon-btn mobile-menu-btn" id="mobile-menu-toggle-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-drawer">
             ☰
           </button>
         </div>
@@ -107,13 +107,17 @@
       </div>
 
       <!-- Mobile Navigation Drawer -->
-      <div class="mobile-nav-drawer" id="mobile-nav-drawer">
+      <div class="mobile-nav-drawer" id="mobile-nav-drawer" role="navigation" aria-label="Mobile Navigation">
         <a class="mobile-nav-link" data-nav-target="home">📖 Home</a>
         <a class="mobile-nav-link" data-nav-target="dashboard">📊 Dashboard</a>
         <a class="mobile-nav-link" data-nav-target="post">✍️ Post (Studio)</a>
         <a class="mobile-nav-link" data-nav-target="community">☕ Community</a>
         <a class="mobile-nav-link" data-nav-target="learning">🎓 Learning Hub</a>
         <a class="mobile-nav-link" data-nav-target="settings">⚙️ Settings</a>
+        <div class="mobile-drawer-auth" id="mobile-drawer-auth">
+          <button type="button" class="btn-primary" id="mobile-drawer-signin-btn" style="flex: 1; padding: 10px; font-size: 0.85rem;">Sign In</button>
+          <button type="button" class="btn-secondary" id="mobile-drawer-signup-btn" style="flex: 1; padding: 10px; font-size: 0.85rem;">Sign Up</button>
+        </div>
       </div>
     </header>
 
