@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FableFlow – Where stories flow and creativity grows</title>
+  <link rel="icon" type="image/webp" href="assets/icons/Magical Fountain Pen and Open Book.webp">
+  
+  <!-- Webfonts: Lexend, Georgia fallback, Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Lexend:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  
+  <!-- OpenDyslexic CDN font -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/opendyslexic@1.0.3/dist/opendyslexic.min.css">
+
+  <!-- Core & Responsive Styles -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/auth-video.css">
+</head>
+<body>
+
+  <!-- App Wrapper -->
+  <div id="app">
+
+    <!-- ========================================================
+         FIXED TOP NAVIGATION BAR
+         ======================================================== -->
+    <header class="top-navbar">
+      <div class="nav-container">
+        
+        <!-- Brand Link (Official Logo only, no text beside or inside) -->
+        <div class="brand-link" id="nav-brand-link" title="Home" aria-label="Home">
+          <img src="assets/icons/Magical Fountain Pen and Open Book.webp" alt="FableFlow" class="brand-logo-img" />
+        </div>
+
+        <!-- Desktop Navigation Tabs -->
+        <nav class="nav-tabs" aria-label="Main Navigation">
+          <button class="nav-tab-item active" data-nav-target="home" data-target="home">
+            📖 Home
+          </button>
+          <button class="nav-tab-item" data-nav-target="dashboard" data-target="dashboard">
+            📊 Dashboard
+          </button>
+          <button class="nav-tab-item" data-nav-target="post" data-target="post">
+            ✍️ Post
+          </button>
+          <button class="nav-tab-item" data-nav-target="community" data-target="community">
+            ☕ Community
+          </button>
+          <button class="nav-tab-item" data-nav-target="learning" data-target="learning">
+            🎓 Learning Hub
+          </button>
+        </nav>
+
+        <!-- Functional Navbar Search Bar -->
+        <div class="nav-search-container" id="nav-search-container" role="search">
+          <div class="nav-search-bar" id="nav-search-bar">
+            <span class="nav-search-icon" aria-hidden="true">🔍</span>
+            <input 
+              type="search" 
+              id="nav-search-input" 
+              class="nav-search-input" 
+              placeholder="Search stories, authors, genres..." 
+              autocomplete="off" 
+              spellcheck="false"
+              aria-label="Search stories, authors, and genres"
+            />
+            <button type="button" class="nav-search-clear-btn" id="nav-search-clear-btn" aria-label="Clear search" style="display: none;">✕</button>
+          </div>
+          <!-- Live Search Results Dropdown -->
+          <div class="nav-search-dropdown" id="nav-search-dropdown" style="display: none;" role="region" aria-label="Search Results"></div>
+        </div>
+
+        <!-- Right Side Nav Actions -->
+        <div class="nav-actions">
+          
+          <!-- Theme Toggle -->
+          <button class="icon-btn" id="nav-theme-toggle" title="Toggle Light / Dark Mode" aria-label="Toggle Theme">
+            <span id="theme-toggle-icon">🌙</span>
+          </button>
+
+          <!-- Settings Button -->
+          <button class="icon-btn" data-nav-target="settings" title="Accessibility &amp; Settings" aria-label="Settings">
+            ⚙️
+          </button>
+
+          <!-- Auth Actions (if not logged in) -->
+          <div id="nav-auth-actions" style="display: flex; gap: 8px;">
+            <button class="btn-auth-nav btn-auth-signin" id="nav-signin-btn">Sign In</button>
+            <button class="btn-auth-nav btn-auth-signup" id="nav-signup-btn">Sign Up</button>
+          </div>
+
+          <!-- User Profile Badge (if logged in) -->
+          <div class="user-profile-badge" id="nav-user-badge" style="display: none;" title="Go to Dashboard">
+            <img src="" id="nav-user-avatar" class="user-avatar-img" alt="Avatar" />
+            <span class="user-name-text" id="nav-username">User</span>
+          </div>
+
+          <!-- Mobile Hamburger -->
+          <button class="icon-btn mobile-menu-btn" id="mobile-menu-toggle-btn" aria-label="Open mobile menu">
+            ☰
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Mobile Navigation Drawer -->
+      <div class="mobile-nav-drawer" id="mobile-nav-drawer">
+        <a class="mobile-nav-link" data-nav-target="home">📖 Home</a>
+        <a class="mobile-nav-link" data-nav-target="dashboard">📊 Dashboard</a>
+        <a class="mobile-nav-link" data-nav-target="post">✍️ Post (Studio)</a>
+        <a class="mobile-nav-link" data-nav-target="community">☕ Community</a>
+        <a class="mobile-nav-link" data-nav-target="learning">🎓 Learning Hub</a>
+        <a class="mobile-nav-link" data-nav-target="settings">⚙️ Settings</a>
+      </div>
+    </header>
+
+    <!-- ========================================================
+         MAIN CONTENT AREA
+         ======================================================== -->
+    <main class="main-content">
+      <div id="backend-error-banner" role="alert" class="card" style="display: none; margin-bottom: 18px; border-color: var(--color-accent); color: var(--color-accent);"></div>
+      <div id="auth-success-banner" role="status" class="card" style="display: none; margin-bottom: 18px; border-color: var(--color-primary); color: var(--color-primary);"></div>
+
+      <!-- ====================================================
+           1. VIEW: HOME (Story Discovery)
+           ==================================================== -->
+      <section id="view-home" class="view-section active">
+        
+        <!-- Continue Reading Bar (Sleek, Fixed Height, Stabilized) -->
+        <div class="continue-reading-card" id="home-continue-reading-card" style="display: none;"></div>
+
+        <!-- Hero Banner -->
+        <div class="hero-banner">
+          <div class="hero-glow-1"></div>
+          <div>
+            <div class="hero-pill">
+              <span>✨</span>
+              <span>AI as a Co-Pilot for Creative Artists</span>
+            </div>
+            <h1 class="hero-title">
+              Where Stories Flow and <br />
+              <span class="hero-title-highlight">Creativity Grows.</span>
+            </h1>
+            <p class="hero-desc">
+              Discover captivating novels, collaborate with AI co-pilots, customize accessible reading typography, and connect with fellow storytellers worldwide.
+            </p>
+            <div class="hero-cta-group">
+              <button class="btn-primary" data-nav-target="post" style="padding: 10px 22px; font-size: 0.9rem;">
+                ✍️ Start Writing
+              </button>
+              <button class="btn-secondary" onclick="document.getElementById('catalog-anchor').scrollIntoView({ behavior: 'smooth' })" style="padding: 10px 22px; font-size: 0.9rem;">
+                📖 Explore Stories
+              </button>
+            </div>
+          </div>
+
+          <!-- Hero Book Showcase -->
+          <div class="hero-book-showcase" onclick="FableFlow.Navigation.navigateTo('story-detail', { id: 'story_1' })">
+            <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80" alt="Featured Book" />
+            <div class="hero-book-overlay">
+              <span style="font-size: 0.65rem; font-weight: 800; background: var(--color-primary); color: #FFFFFF; padding: 2px 8px; border-radius: 999px; width: max-content; margin-bottom: 4px;">
+                FEATURED
+              </span>
+              <h4 style="font-size: 0.92rem; font-weight: 800; color: #FFFFFF;">Whispers of the Glass Citadel</h4>
+              <p style="font-size: 0.72rem; color: rgba(255,255,255,0.85);">by Elena Vance • 34.2K Reads</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div id="catalog-anchor" class="discovery-controls">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div class="search-bar-wrap">
+              <span class="search-icon-pos">🔍</span>
+              <input type="text" id="home-search-input" class="search-input" placeholder="Search stories, titles, authors, tags..." />
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">
+              Wattpad-inspired story discovery
+            </p>
+          </div>
+
+          <!-- Genre Filter Pills -->
+          <div class="genre-filter-scroll" id="home-genre-pills"></div>
+        </div>
+
+        <!-- Featured Stories Section -->
+        <div class="section-header">
+          <h2 class="section-title">✨ Featured Stories</h2>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Curated editor selections</span>
+        </div>
+        <div class="story-grid" id="home-featured-grid"></div>
+
+        <!-- Trending Stories Section -->
+        <div class="section-header">
+          <h2 class="section-title">🔥 Trending on FableFlow</h2>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Most reader engagement this week</span>
+        </div>
+        <div class="story-grid" id="home-trending-grid"></div>
+
+        <!-- All Stories Catalog -->
+        <div class="section-header">
+          <h2 class="section-title">📚 Discover All Stories</h2>
+        </div>
+        <div class="story-grid" id="home-stories-grid"></div>
+
+        <!-- Popular Authors Section -->
+        <div class="card" style="margin-top: 32px; padding: 28px;">
+          <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 4px;">Featured Storytellers</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">Follow visionary authors crafting worlds on FableFlow</p>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--bg-elevated); border-radius: var(--radius-md); cursor: pointer;"
+                 onclick="FableFlow.Navigation.navigateTo('author-profile', { id: 'usr_author_1' })">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--color-primary);" alt="" />
+              <div>
+                <strong style="font-size: 0.9rem;">Elena Vance</strong>
+                <p style="font-size: 0.75rem; color: var(--text-muted);">@ElenaVance • Fantasy</p>
+                <span style="font-size: 0.72rem; color: var(--color-primary); font-weight: 700;">85.2K Reads</span>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--bg-elevated); border-radius: var(--radius-md); cursor: pointer;"
+                 onclick="FableFlow.Navigation.navigateTo('author-profile', { id: 'usr_author_2' })">
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--color-primary);" alt="" />
+              <div>
+                <strong style="font-size: 0.9rem;">Marcus Sterling</strong>
+                <p style="font-size: 0.75rem; color: var(--text-muted);">@MarcusSterling • Sci-Fi</p>
+                <span style="font-size: 0.72rem; color: var(--color-primary); font-weight: 700;">49.1K Reads</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ====================================================
+           2. VIEW: STORY DETAIL
+           ==================================================== -->
+      <section id="view-story-detail" class="view-section"></section>
+
+      <!-- ====================================================
+           3. VIEW: STORY READER (Wattpad Distraction-Free)
+           ==================================================== -->
+      <section id="view-story-reader" class="view-section"></section>
+
+      <!-- ====================================================
+           4. VIEW: DASHBOARD (Writer & Reader Experiences)
+           ==================================================== -->
+      <section id="view-dashboard" class="view-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h1 style="font-size: 1.8rem; font-weight: 900;">Dashboard</h1>
+            <p style="font-size: 0.82rem; color: var(--text-muted);">Your manuscripts, audience reach, and reading habit metrics.</p>
+          </div>
+
+          <div style="display: flex; gap: 8px; background: var(--bg-elevated); padding: 4px; border-radius: var(--radius-md);">
+            <button class="genre-pill active" id="dashboard-tab-writer" onclick="document.getElementById('dashboard-writer-content').style.display='block'; document.getElementById('dashboard-reader-content').style.display='none'; this.classList.add('active'); document.getElementById('dashboard-tab-reader').classList.remove('active');">
+              ✍️ Writer View
+            </button>
+            <button class="genre-pill" id="dashboard-tab-reader" onclick="document.getElementById('dashboard-writer-content').style.display='none'; document.getElementById('dashboard-reader-content').style.display='block'; this.classList.add('active'); document.getElementById('dashboard-tab-writer').classList.remove('active');">
+              📖 Reader View
+            </button>
+          </div>
+        </div>
+
+        <div id="dashboard-writer-content"></div>
+        <div id="dashboard-reader-content" style="display: none;"></div>
+      </section>
+
+      <!-- ====================================================
+           5. VIEW: POST – STORY WRITING STUDIO
+           ==================================================== -->
+      <section id="view-post" class="view-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h1 style="font-size: 1.8rem; font-weight: 900;">Story Writing Studio</h1>
+            <p style="font-size: 0.82rem; color: var(--text-muted);">Compose chapters, format prose, and collaborate with AI writing co-pilots.</p>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 0.75rem; color: var(--text-muted);" id="editor-save-status">All changes saved locally</span>
+            <button class="btn-secondary" onclick="FableFlow.Editor.saveStory(false)">💾 Save Draft</button>
+            <button class="btn-primary" onclick="FableFlow.Editor.saveStory(true)">🚀 Publish to Catalog</button>
+          </div>
+        </div>
+
+        <!-- Story Metadata Card -->
+        <div class="card" style="margin-bottom: 24px;">
+          <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 14px;">Story Profile &amp; Metadata</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+            <div>
+              <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Story Title</label>
+              <input type="text" id="editor-story-title" class="search-input" placeholder="e.g. Chronicles of the Solar Archivist" />
+            </div>
+
+            <div>
+              <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Genre</label>
+              <select id="editor-story-genre" class="search-input">
+                <option value="Fantasy">Fantasy</option>
+                <option value="Science Fiction">Science Fiction</option>
+                <option value="Romance">Romance</option>
+                <option value="Mystery">Mystery</option>
+                <option value="Thriller">Thriller</option>
+                <option value="Horror">Horror</option>
+                <option value="Adventure">Adventure</option>
+                <option value="Poetry">Poetry</option>
+                <option value="Drama">Drama</option>
+                <option value="Fanfiction">Fanfiction</option>
+              </select>
+            </div>
+
+            <div>
+              <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Tags (comma separated)</label>
+              <input type="text" id="editor-story-tags" class="search-input" placeholder="Magic, Cyberpunk, Heist" />
+            </div>
+
+            <div>
+              <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Cover Image URL</label>
+              <input type="text" id="editor-story-cover" class="search-input" placeholder="https://images.unsplash.com/..." />
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Synopsis / Blurb</label>
+            <textarea id="editor-story-desc" class="search-input" style="height: 60px; resize: vertical;" placeholder="Hook your readers with a compelling teaser..."></textarea>
+          </div>
+        </div>
+
+        <!-- Studio Main Layout -->
+        <div class="editor-layout">
+          
+          <!-- Left: Chapter Prose Editor -->
+          <div>
+            <div class="card" style="padding: 16px; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <input type="text" id="editor-chapter-title" class="search-input" style="font-size: 1.1rem; font-weight: 800; border: none; padding-left: 8px;" placeholder="Chapter 1: Title..." />
+                <button class="btn-secondary" onclick="FableFlow.Editor.addChapter()" style="padding: 6px 12px; font-size: 0.78rem;">+ New Chapter</button>
+              </div>
+
+              <!-- Rich Formatting Toolbar -->
+              <div class="editor-toolbar">
+                <button class="editor-toolbar-btn" onclick="FableFlow.Editor.formatText('**', '**')">B</button>
+                <button class="editor-toolbar-btn" onclick="FableFlow.Editor.formatText('*', '*')">I</button>
+                <button class="editor-toolbar-btn" onclick="FableFlow.Editor.formatText('<u>', '</u>')">U</button>
+                <button class="editor-toolbar-btn" onclick="FableFlow.Editor.formatText('## ')">H2</button>
+                <button class="editor-toolbar-btn" onclick="FableFlow.Editor.formatText('### ')">H3</button>
+                <button class="editor-toolbar-btn" onclick="FableFlow.Editor.formatText('> ')">Quote</button>
+                <button class="editor-toolbar-btn" onclick="FableFlow.Editor.formatText('- ')">• List</button>
+                <button class="editor-toolbar-btn" onclick="FableFlow.Editor.formatText('\n---\n')">Divider</button>
+              </div>
+
+              <textarea id="editor-chapter-body" class="editor-textarea" placeholder="Once upon a time, beneath the singing fractures of the northern sky... Let your story flow freely here."></textarea>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 0.75rem; color: var(--text-muted);">
+                <div style="display: flex; gap: 14px;">
+                  <span id="editor-word-count">0 words</span>
+                  <span id="editor-char-count">0 characters</span>
+                  <span id="editor-read-time">~1 min read</span>
+                </div>
+                <span>Auto-backup active in memory</span>
+              </div>
+            </div>
+
+            <!-- Chapters Directory -->
+            <div class="card">
+              <h4 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 12px;">Manuscript Chapters</h4>
+              <div id="editor-chapters-directory"></div>
+            </div>
+          </div>
+
+          <!-- Right: AI Co-Pilot Panel -->
+          <div>
+            <div class="card" style="position: sticky; top: calc(var(--nav-height) + 16px);">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+                <span style="font-size: 1.2rem;">✨</span>
+                <div>
+                  <h4 style="font-size: 0.95rem; font-weight: 800;">AI Writing Co-Pilot</h4>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Non-destructive literary suggestions</span>
+                </div>
+              </div>
+
+              <!-- 8 AI Tool Actions -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 16px;">
+                <button class="btn-secondary" style="padding: 6px; font-size: 0.72rem;" onclick="FableFlow.Editor.triggerAI('grammar')">1. Grammar Polish</button>
+                <button class="btn-secondary" style="padding: 6px; font-size: 0.72rem;" onclick="FableFlow.Editor.triggerAI('vocabulary')">2. Sensory Vocab</button>
+                <button class="btn-secondary" style="padding: 6px; font-size: 0.72rem;" onclick="FableFlow.Editor.triggerAI('sentence_improvement')">3. Sentence Flow</button>
+                <button class="btn-secondary" style="padding: 6px; font-size: 0.72rem;" onclick="FableFlow.Editor.triggerAI('plot_development')">4. Plot Twists</button>
+                <button class="btn-secondary" style="padding: 6px; font-size: 0.72rem;" onclick="FableFlow.Editor.triggerAI('character_development')">5. Character Flaws</button>
+                <button class="btn-secondary" style="padding: 6px; font-size: 0.72rem;" onclick="FableFlow.Editor.triggerAI('writers_block')">6. Unstick Scene</button>
+                <button class="btn-secondary" style="padding: 6px; font-size: 0.72rem;" onclick="FableFlow.Editor.triggerAI('dialogue_improvement')">7. Dialogue Polish</button>
+                <button class="btn-secondary" style="padding: 6px; font-size: 0.72rem;" onclick="FableFlow.Editor.triggerAI('creative_prompt')">8. Story Prompts</button>
+              </div>
+
+              <!-- AI Suggestions Tray with Accept, Reject, Edit -->
+              <h5 style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">
+                Pending Suggestions
+              </h5>
+              <div class="ai-suggestions-tray" id="editor-ai-suggestions-tray"></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ====================================================
+           6. VIEW: COMMUNITY
+           ==================================================== -->
+      <section id="view-community" class="view-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h1 style="font-size: 1.8rem; font-weight: 900;">Community &amp; Writer Guilds</h1>
+            <p style="font-size: 0.82rem; color: var(--text-muted);">Real-time styled author group lounges, writing challenges, and critique discussions.</p>
+          </div>
+        </div>
+
+        <div class="community-layout">
+          <!-- Left: Guilds List -->
+          <div>
+            <h4 style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;">Story Guilds</h4>
+            <div id="community-guilds-list"></div>
+          </div>
+
+          <!-- Right: Active Guild Hub -->
+          <div>
+            <div class="card" style="margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <div>
+                  <h2 style="font-size: 1.3rem; font-weight: 900;" id="community-active-title">Guild Name</h2>
+                  <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;" id="community-active-desc">Description</p>
+                </div>
+                <button id="community-join-btn" class="btn-primary">Join Guild</button>
+              </div>
+
+              <!-- Sub-tab Navigation -->
+              <div style="display: flex; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 14px;">
+                <button class="community-subtab-btn genre-pill active" data-subtab="chat" onclick="FableFlow.Community.setSubTab('chat')">💬 Group Chat</button>
+                <button class="community-subtab-btn genre-pill" data-subtab="challenges" onclick="FableFlow.Community.setSubTab('challenges')">⚡ Challenges</button>
+                <button class="community-subtab-btn genre-pill" data-subtab="discussions" onclick="FableFlow.Community.setSubTab('discussions')">🔥 Discussions</button>
+              </div>
+            </div>
+
+            <!-- Pane 1: Group Chat -->
+            <div id="community-pane-chat" class="chat-box">
+              <div class="chat-messages" id="community-chat-messages"></div>
+              <form id="community-chat-form" class="chat-input-bar">
+                <input type="text" id="community-chat-input" class="search-input" placeholder="Type a message to the guild lounge..." required />
+                <button type="submit" class="btn-primary">Send</button>
+              </form>
+            </div>
+
+            <!-- Pane 2: Writing Challenges -->
+            <div id="community-pane-challenges" style="display: none;"></div>
+
+            <!-- Pane 3: Discussions -->
+            <div id="community-pane-discussions" style="display: none;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================
+           7. VIEW: LEARNING HUB
+           ==================================================== -->
+      <section id="view-learning" class="view-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h1 style="font-size: 1.8rem; font-weight: 900;">Learning Hub</h1>
+            <p style="font-size: 0.82rem; color: var(--text-muted);">Focus sprints, literary vocabulary building, and personal dictionary archive.</p>
+          </div>
+
+          <div style="display: flex; gap: 8px; background: var(--bg-elevated); padding: 4px; border-radius: var(--radius-md);">
+            <button class="genre-pill active" id="learning-subtab-focus" onclick="document.getElementById('learning-sec-focus').style.display='block'; document.getElementById('learning-sec-vocab').style.display='none'; document.getElementById('learning-sec-dict').style.display='none'; this.classList.add('active'); document.getElementById('learning-subtab-vocab').classList.remove('active'); document.getElementById('learning-subtab-dict').classList.remove('active');">
+              ⏱️ Focus Zone
+            </button>
+            <button class="genre-pill" id="learning-subtab-vocab" onclick="document.getElementById('learning-sec-focus').style.display='none'; document.getElementById('learning-sec-vocab').style.display='block'; document.getElementById('learning-sec-dict').style.display='none'; this.classList.add('active'); document.getElementById('learning-subtab-focus').classList.remove('active'); document.getElementById('learning-subtab-dict').classList.remove('active');">
+              🌿 Vocabulary Corner
+            </button>
+            <button class="genre-pill" id="learning-subtab-dict" onclick="document.getElementById('learning-sec-focus').style.display='none'; document.getElementById('learning-sec-vocab').style.display='none'; document.getElementById('learning-sec-dict').style.display='block'; this.classList.add('active'); document.getElementById('learning-subtab-focus').classList.remove('active'); document.getElementById('learning-subtab-vocab').classList.remove('active');">
+              📖 My Dictionary
+            </button>
+          </div>
+        </div>
+
+        <!-- Section A: Focus Zone (Pomodoro) -->
+        <div id="learning-sec-focus" class="card" style="text-align: center; max-width: 680px; margin: 0 auto;">
+          <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 4px;">Focus Sprint (Pomodoro Timer)</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 18px;">
+            Accurate timestamp-based timing continues seamlessly even across inactive browser tabs.
+          </p>
+
+          <!-- Activity Selection -->
+          <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 16px;">
+            <button class="focus-activity-btn genre-pill active" data-act="Writing">Writing</button>
+            <button class="focus-activity-btn genre-pill" data-act="Reading">Reading</button>
+            <button class="focus-activity-btn genre-pill" data-act="Vocabulary Practice">Vocabulary</button>
+          </div>
+
+          <!-- Presets -->
+          <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 20px;">
+            <button class="pomodoro-preset-btn genre-pill" data-mins="5">5 Mins</button>
+            <button class="pomodoro-preset-btn genre-pill" data-mins="15">15 Mins</button>
+            <button class="pomodoro-preset-btn genre-pill active" data-mins="25">25 Mins</button>
+          </div>
+
+          <!-- Countdown Dial -->
+          <div class="pomodoro-dial">
+            <span class="pomodoro-digits" id="pomodoro-digits">25:00</span>
+            <span style="font-size: 0.72rem; font-weight: 800; color: var(--color-primary); text-transform: uppercase;">Focus Sprint</span>
+          </div>
+
+          <!-- Controls -->
+          <div style="display: flex; justify-content: center; gap: 12px; margin-top: 20px;">
+            <button class="btn-primary" id="pomodoro-start-btn" style="padding: 12px 32px; font-size: 1rem;">▶ Start Sprint</button>
+            <button class="btn-secondary" id="pomodoro-pause-btn" style="padding: 12px 32px; font-size: 1rem; display: none;">⏸ Pause</button>
+            <button class="btn-primary" id="pomodoro-resume-btn" style="padding: 12px 32px; font-size: 1rem; display: none;">▶ Resume</button>
+            <button class="btn-secondary" id="pomodoro-reset-btn">↺ Reset</button>
+          </div>
+
+          <!-- Stats -->
+          <div style="display: flex; justify-content: center; gap: 32px; margin-top: 32px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+            <div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">TOTAL TIME</span>
+              <p style="font-size: 1.4rem; font-weight: 900; color: var(--color-primary);" id="focus-total-minutes">0 mins</p>
+            </div>
+            <div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">SESSIONS</span>
+              <p style="font-size: 1.4rem; font-weight: 900;" id="focus-total-sessions">0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section B: Vocabulary Corner -->
+        <div id="learning-sec-vocab" style="display: none; max-width: 760px; margin: 0 auto;">
+          
+          <!-- Word of the Day Card -->
+          <div class="wotd-card">
+            <div class="wotd-badge">
+              <span>✨</span>
+              <span>Word of the Day</span>
+            </div>
+            <div class="wotd-header-row">
+              <h2 class="wotd-title" id="wotd-word">Luminescent</h2>
+              <button class="wotd-sound-btn" id="wotd-pronounce-btn" title="Pronounce word" aria-label="Pronounce word">
+                <span>🔊</span>
+                <span>Listen</span>
+              </button>
+            </div>
+            <p class="wotd-phonetic" id="wotd-phonetic">/ˌluː.mɪˈnes.ənt/ (adjective)</p>
+            
+            <div class="wotd-meaning-box">
+              <p class="wotd-meaning" id="wotd-meaning">"Emitting light not caused by heat; glowing softly with an ethereal radiance."</p>
+              <p class="wotd-example" id="wotd-example">Example: "The subterranean cavern was illuminated by luminescent moss."</p>
+            </div>
+
+            <div class="wotd-meta-row">
+              <div class="wotd-meta-col">
+                <span class="wotd-meta-label wotd-syn-label">Synonyms</span>
+                <div id="wotd-synonyms" class="wotd-chips-wrap"></div>
+              </div>
+              <div class="wotd-meta-col">
+                <span class="wotd-meta-label wotd-ant-label">Antonyms</span>
+                <div id="wotd-antonyms" class="wotd-chips-wrap"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vocab Search -->
+          <div class="card" style="margin-bottom: 24px; padding: 22px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+              <h4 style="font-size: 1.05rem; font-weight: 800; color: var(--text-main);">Literary Vocabulary Lookup</h4>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Instant definitions &amp; phonetics</span>
+            </div>
+            <div class="vocab-search-wrap">
+              <span class="vocab-search-icon">🔍</span>
+              <input type="text" id="vocab-search-input" class="search-input vocab-search-input" placeholder="Search literary terms (e.g. Petrichor, Mellifluous, Ephemera)..." autocomplete="off" />
+            </div>
+            <div id="vocab-search-results" class="vocab-search-results"></div>
+          </div>
+
+          <!-- Interactive Vocab Quiz -->
+          <div class="card" id="vocab-quiz-container" style="padding: 22px;"></div>
+        </div>
+
+        <!-- Section C: My Dictionary -->
+        <div id="learning-sec-dict" style="display: none; max-width: 760px; margin: 0 auto;">
+          <div class="card" style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              <div>
+                <h3 style="font-size: 1.15rem; font-weight: 800;">Personal Literary Dictionary</h3>
+                <p style="font-size: 0.78rem; color: var(--text-muted);">Save words you encounter while reading or writing.</p>
+              </div>
+
+              <div style="display: flex; gap: 8px;">
+                <button class="btn-secondary" onclick="FableFlow.Learning.renderDictionary('alpha')">A-Z Sort</button>
+                <button class="btn-secondary" onclick="FableFlow.Learning.renderDictionary('recent')">Recent</button>
+                <button class="btn-primary" onclick="document.getElementById('dict-modal').classList.add('open')">+ Add Word</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="dictionary-entries-list"></div>
+        </div>
+      </section>
+
+      <!-- ====================================================
+           8. VIEW: AUTHOR PROFILE
+           ==================================================== -->
+      <section id="view-author-profile" class="view-section"></section>
+
+      <!-- ====================================================
+           9. VIEW: SETTINGS
+           ==================================================== -->
+      <section id="view-settings" class="view-section">
+        <div style="margin-bottom: 24px;">
+          <h1 style="font-size: 1.8rem; font-weight: 900;">Settings &amp; Universal Accessibility</h1>
+          <p style="font-size: 0.82rem; color: var(--text-muted);">Typography preferences here update the entire website immediately.</p>
+        </div>
+
+        <div class="card" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; padding: 18px;">
+          <div>
+            <h2 style="font-size: 1rem; font-weight: 800; margin-bottom: 4px;">Personalize your experience</h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">Choose the reading and display options that work best for you. These preferences are optional and can be changed any time.</p>
+          </div>
+          <button type="button" class="btn-primary" data-nav-target="home" style="padding: 10px 18px; white-space: nowrap;">Continue to Home →</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+          
+          <!-- Typography Card -->
+          <div class="card">
+            <h3 style="font-size: 1.05rem; font-weight: 800; margin-bottom: 16px;">Global Typography Settings</h3>
+            
+            <div style="margin-bottom: 14px;">
+              <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Font Style</label>
+              <select id="settings-font-select" class="search-input">
+                <option value="lexend">Lexend (High Readability)</option>
+                <option value="georgia">Georgia (Classic Literary Serif)</option>
+                <option value="arial">Arial (Modern Clean Sans)</option>
+                <option value="verdana">Verdana (Spacious Open Sans)</option>
+                <option value="dyslexic">OpenDyslexic (Dyslexia-Friendly)</option>
+              </select>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 4px;">
+                <span>Font Size</span>
+                <span id="settings-font-size-val">16px</span>
+              </div>
+              <input type="range" id="settings-font-size" min="14" max="24" step="1" value="16" style="width: 100%;" />
+            </div>
+
+            <div style="margin-bottom: 14px;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 4px;">
+                <span>Line Spacing</span>
+                <span id="settings-line-spacing-val">1.6x</span>
+              </div>
+              <input type="range" id="settings-line-spacing" min="1.2" max="2.4" step="0.1" value="1.6" style="width: 100%;" />
+            </div>
+
+            <div style="margin-bottom: 14px;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 4px;">
+                <span>Word Spacing</span>
+                <span id="settings-word-spacing-val">1px</span>
+              </div>
+              <input type="range" id="settings-word-spacing" min="0" max="4" step="0.5" value="1" style="width: 100%;" />
+            </div>
+          </div>
+
+          <!-- Appearance & Palette Card -->
+          <div class="card">
+            <h3 style="font-size: 1.05rem; font-weight: 800; margin-bottom: 16px;">Color Palette &amp; Appearance</h3>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 16px;">
+              Toggle between Warm Parchment and Nocturne Sage literary themes.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <button class="card" id="settings-theme-light-btn" style="display: flex; align-items: center; justify-content: space-between; padding: 14px; text-align: left; cursor: pointer;">
+                <div>
+                  <strong style="font-size: 0.88rem;">☀️ Warm Parchment &amp; Forest Green (Light Theme)</strong>
+                  <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Parchment #F7F4EC • Deep Forest #2F6B52 • Muted Navy #354A70 • Terracotta #C9684B</p>
+                </div>
+              </button>
+
+              <button class="card" id="settings-theme-dark-btn" style="display: flex; align-items: center; justify-content: space-between; padding: 14px; text-align: left; cursor: pointer;">
+                <div>
+                  <strong style="font-size: 0.88rem;">🌙 Nocturne &amp; Sage Green (Dark Theme)</strong>
+                  <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Nocturne #151D1A • Soft Sage #8CC7A2 • Soft Periwinkle #9DADD7 • Muted Coral #E18A6E</p>
+                </div>
+              </button>
+            </div>
+
+            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+              <h4 style="font-size: 0.88rem; font-weight: 800; margin-bottom: 6px;">Account Security</h4>
+              <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+                FableFlow uses Supabase Auth for accounts. Your profile, reading preferences, and saved activity sync to your account.
+              </p>
+            </div>
+          </div>
+
+          <!-- Account & Session / Logout Card -->
+          <div class="card" id="settings-account-card">
+            <h3 style="font-size: 1.05rem; font-weight: 800; margin-bottom: 12px;">Account &amp; Session</h3>
+            <div id="settings-account-info" style="margin-bottom: 16px;">
+              <p style="font-size: 0.85rem; margin-bottom: 6px;">Account: <strong id="settings-current-username">—</strong></p>
+              <p style="font-size: 0.78rem; color: var(--text-muted);">Status: <span id="settings-current-email">—</span></p>
+            </div>
+
+            <!-- Default Logout Button -->
+            <div id="settings-logout-trigger-wrap">
+              <button type="button" class="btn-accent" id="settings-logout-init-btn" style="padding: 10px 20px;">
+                🚪 Log Out
+              </button>
+            </div>
+
+            <!-- Logout Confirmation Box (hidden initially) -->
+            <div id="settings-logout-confirm-box" class="card" style="display: none; margin-top: 14px; padding: 16px; border: 2px solid var(--color-accent); background-color: var(--bg-card);">
+              <p id="settings-logout-confirm-msg" style="font-size: 0.95rem; font-weight: 800; margin-bottom: 12px; color: var(--color-accent);">
+                Are you sure you want to log out?
+              </p>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button type="button" class="btn-accent" id="settings-logout-confirm-btn" style="padding: 8px 16px;">
+                  Confirm Logout
+                </button>
+                <button type="button" class="btn-secondary" id="settings-logout-cancel-btn" style="padding: 8px 16px;">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Sample Preview -->
+        <div class="card" style="margin-top: 24px;">
+          <h4 style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">
+            Live Typography Preview
+          </h4>
+          <div id="settings-live-preview-box" style="padding: 18px; border: 2px dashed var(--color-primary); border-radius: 8px; background-color: var(--bg-card);">
+            "Every story begins with an idea. Sometimes it takes courage to turn that idea into words. But every word brings a new world to life."
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ========================================================
+         FLOATING AI ASSISTANT ORB & SLIDING DRAWER
+         ======================================================== -->
+    <button class="floating-ai-trigger" id="floating-ai-trigger" title="FableFlow AI Co-Pilot" aria-label="Open AI Co-Pilot">
+      <span class="ai-orb-core">
+        <span class="ai-orb-sparkle">✨</span>
+      </span>
+      <span class="ai-orb-tooltip">AI Co-Pilot</span>
+    </button>
+
+    <div class="ai-assistant-drawer" id="ai-assistant-drawer">
+      <div class="ai-drawer-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span>✨</span>
+          <div>
+            <h4 style="font-size: 0.88rem; font-weight: 800;">AI Co-Pilot</h4>
+            <span style="font-size: 0.65rem; opacity: 0.85;">Creative writing mentor (Demo Mode)</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 4px;">
+          <button class="icon-btn" id="ai-drawer-clear" style="font-size: 0.8rem;" title="Clear Chat">🗑️</button>
+          <button class="icon-btn" id="ai-drawer-close" title="Close">✕</button>
+        </div>
+      </div>
+
+      <!-- Quick prompts -->
+      <div style="display: flex; gap: 6px; overflow-x: auto; padding: 10px; background-color: var(--bg-elevated); border-bottom: 2px solid var(--border-color); scrollbar-width: none;">
+        <button class="genre-pill ai-quick-chip" style="font-size: 0.7rem; padding: 4px 10px;" data-prompt="Give me a high fantasy plot twist involving a singing crystal.">Plot Twist</button>
+        <button class="genre-pill ai-quick-chip" style="font-size: 0.7rem; padding: 4px 10px;" data-prompt="I am stuck in chapter 2. How can I raise tension?">Unstick Scene</button>
+        <button class="genre-pill ai-quick-chip" style="font-size: 0.7rem; padding: 4px 10px;" data-prompt="How do I craft polite constructive feedback on pacing?">Critique Help</button>
+      </div>
+
+      <!-- Messages scroll -->
+      <div id="ai-drawer-messages" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column;"></div>
+
+      <!-- Input Form -->
+      <form id="ai-drawer-form" style="padding: 12px; border-top: 2px solid var(--border-color); display: flex; gap: 8px;">
+        <input type="text" id="ai-drawer-input" class="search-input" placeholder="Ask AI for plot, dialogue, grammar..." required />
+        <button type="submit" class="btn-primary" style="padding: 8px 14px;">Send</button>
+      </form>
+    </div>
+
+    <!-- ========================================================
+         FLOATING SELECTION READING TOOLBAR (Reader View)
+         ======================================================== -->
+    <div class="selection-ai-popover" id="reader-selection-popover">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <span style="font-size: 0.72rem; font-weight: 800; color: var(--color-accent);">AI Reading Co-Pilot</span>
+        <button onclick="document.getElementById('reader-selection-popover').style.display='none'" style="font-size: 0.7rem; color: var(--text-muted);">✕</button>
+      </div>
+      <p id="selection-popover-text" style="font-size: 0.7rem; font-style: italic; color: var(--text-muted); margin-bottom: 8px;"></p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+        <button class="btn-secondary" style="padding: 4px 6px; font-size: 0.68rem;" onclick="alert('Definition: In literary prose, this signifies a heightened emotional state or atmospheric tone.')">Explain Word</button>
+        <button class="btn-secondary" style="padding: 4px 6px; font-size: 0.68rem;" onclick="alert('Sentence Breakdown: The author employs sensory contrast and foreshadowing to emphasize the protagonist isolation.')">Subtext</button>
+        <button class="btn-secondary" style="padding: 4px 6px; font-size: 0.68rem;" onclick="alert('Passage Summary: Establishes environmental stakes and the threshold between known reality and ancient mystery.')">Summarize</button>
+        <button class="btn-primary" style="padding: 4px 6px; font-size: 0.68rem;" onclick="const t = document.getElementById('reader-selection-popover').getAttribute('data-selected-text'); FableFlow.Learning.addDictEntry(t, 'Saved from reading session', ''); alert('Saved to My Dictionary!'); document.getElementById('reader-selection-popover').style.display='none';">+ Dict</button>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         AUTHENTICATION & ACCESSIBILITY ONBOARDING MODAL
+         ======================================================== -->
+    <div class="modal-overlay" id="auth-modal">
+      <div class="modal-window auth-modal-window" id="auth-modal-window">
+        <!-- Modal Close Button -->
+        <button id="auth-modal-close" class="modal-close-btn auth-modal-close-btn" title="Close" aria-label="Close dialog">✕</button>
+
+        <div class="auth-modal-layout">
+          <!-- LEFT COLUMN: Authentication Forms -->
+          <div class="auth-form-column">
+            <!-- Modal Branding Header (Official Logo only, no text beside or inside) -->
+            <div class="modal-brand-header">
+              <img src="assets/icons/Magical Fountain Pen and Open Book.webp" alt="FableFlow" class="auth-brand-logo" />
+            </div>
+
+            <!-- Mode Tabs -->
+            <div style="display: flex; border-bottom: 2px solid var(--border-color);">
+              <button id="auth-tab-login" class="nav-tab-item active" style="flex: 1; border-radius: 0; padding: 14px; text-align: center; justify-content: center;">Sign In</button>
+              <button id="auth-tab-register" class="nav-tab-item" style="flex: 1; border-radius: 0; padding: 14px; text-align: center; justify-content: center;">Create Account</button>
+            </div>
+
+            <div class="auth-forms-scroll-wrap">
+              <div id="auth-error-msg" style="display: none; padding: 10px; border-radius: 8px; background-color: var(--color-accent); color: var(--color-primary); font-size: 0.8rem; margin-bottom: 14px; font-weight: 700;"></div>
+              <div id="auth-success-msg" style="display: none; padding: 10px; border-radius: 8px; background-color: var(--bg-elevated); color: var(--color-primary); font-size: 0.8rem; margin-bottom: 14px; font-weight: 700;"></div>
+
+          <!-- Login Form (No autofill, empty credentials) -->
+          <form id="auth-login-form" autocomplete="off">
+            <p class="auth-welcome-msg" style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
+              Welcome back to FableFlow! Sign in to continue writing, participate in discussions, and manage your library.
+            </p>
+            <div style="margin-bottom: 12px;">
+              <label for="login-email" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Email address</label>
+              <input type="email" id="login-email" name="login-email" class="search-input" placeholder="Enter your email address" autocomplete="off" value="" required />
+            </div>
+            <div style="margin-bottom: 16px;">
+              <label for="login-password" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Password</label>
+              <input type="password" id="login-password" name="login-password" class="search-input" placeholder="Enter your password" autocomplete="new-password" value="" required />
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 12px;">Sign In to FableFlow</button>
+
+            <div class="auth-divider"><span>OR</span></div>
+            <button type="button" class="btn-guest" id="auth-guest-btn-login">
+              <span>Continue as Guest</span>
+              <span style="font-size: 0.72rem; opacity: 0.85;">Browse stories, listen with TTS &amp; customize typography without an account →</span>
+            </button>
+          </form>
+
+          <!-- Register Form with Accessibility Onboarding (No autofill) -->
+          <form id="auth-register-form" autocomplete="off" style="display: none;">
+            <p class="auth-welcome-msg" style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
+              Join FableFlow's creative community! Set up your accessible reading typography right away.
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+              <div>
+                <label for="reg-username" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Username</label>
+                <input type="text" id="reg-username" name="reg-username" class="search-input" placeholder="Choose a username" autocomplete="off" value="" required />
+              </div>
+              <div>
+                <label for="reg-email" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Email</label>
+                <input type="email" id="reg-email" name="reg-email" class="search-input" placeholder="Enter your email" autocomplete="off" value="" required />
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+              <div>
+                <label for="reg-password" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Password</label>
+                <input type="password" id="reg-password" name="reg-password" class="search-input" placeholder="At least 8 characters" autocomplete="new-password" value="" required />
+              </div>
+              <div>
+                <label for="reg-confirm-password" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Confirm Password</label>
+                <input type="password" id="reg-confirm-password" name="reg-confirm-password" class="search-input" placeholder="Repeat password" autocomplete="new-password" value="" required />
+              </div>
+            </div>
+
+            <!-- Accessibility Onboarding Controls -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px;">
+              <h4 style="font-size: 0.85rem; font-weight: 800; color: var(--color-primary); margin-bottom: 6px;">Personalized Reading Typography</h4>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px;">Adjust settings now; they apply across every story and studio page.</p>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--bg-elevated); padding: 12px; border-radius: 8px; margin-bottom: 14px;">
+                <div>
+                  <label style="font-size: 0.72rem; font-weight: 700; display: block; margin-bottom: 2px;">Font Style</label>
+                  <select id="reg-pref-font" class="search-input" style="padding: 6px 8px; font-size: 0.75rem;">
+                    <option value="lexend">Lexend (High Legibility)</option>
+                    <option value="georgia">Georgia (Classic Serif)</option>
+                    <option value="arial">Arial (Modern Sans)</option>
+                    <option value="verdana">Verdana (Spacious)</option>
+                    <option value="dyslexic">OpenDyslexic (Dyslexia Friendly)</option>
+                  </select>
+                </div>
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 700;">
+                    <span>Size</span>
+                    <span id="reg-pref-size-val">16px</span>
+                  </div>
+                  <input type="range" id="reg-pref-size" min="14" max="24" step="1" value="16" style="width: 100%; margin-top: 4px;" />
+                </div>
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 700;">
+                    <span>Line Spacing</span>
+                    <span id="reg-pref-line-val">1.6x</span>
+                  </div>
+                  <input type="range" id="reg-pref-line" min="1.2" max="2.4" step="0.1" value="1.6" style="width: 100%; margin-top: 4px;" />
+                </div>
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 700;">
+                    <span>Word Spacing</span>
+                    <span id="reg-pref-word-val">1px</span>
+                  </div>
+                  <input type="range" id="reg-pref-word" min="0" max="4" step="0.5" value="1" style="width: 100%; margin-top: 4px;" />
+                </div>
+              </div>
+
+              <!-- Required Exact Sample Paragraph -->
+              <p style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Live Sample Paragraph:</p>
+              <div id="accessibility-sample-paragraph" style="padding: 12px; border: 1px dashed var(--color-primary); border-radius: 8px; margin-bottom: 12px; background: var(--bg-card);">
+                "Every story begins with an idea. Sometimes it takes courage to turn that idea into words. But every word brings a new world to life."
+              </div>
+
+              <!-- Separate Sample Writing Preview -->
+              <p style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Sample Writing Studio Preview:</p>
+              <div id="accessibility-sample-studio" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 16px; background: var(--bg-elevated); font-style: italic;">
+                Chapter 1: The Singing Fractures — "Beneath the lantern glow, the ink dried slowly on the vellum map..."
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 12px;">Create Free Account</button>
+
+            <div class="auth-divider"><span>OR</span></div>
+            <button type="button" class="btn-guest" id="auth-guest-btn-register">
+              <span>Continue as Guest</span>
+              <span style="font-size: 0.72rem; opacity: 0.85;">Browse stories, listen with TTS &amp; customize typography without an account →</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Studying Video Visual -->
+      <div class="auth-video-column" id="auth-video-column" aria-hidden="true">
+        <div class="auth-video-viewport" id="auth-video-viewport">
+          <video 
+            id="auth-studying-video" 
+            class="auth-studying-video" 
+            autoplay 
+            loop 
+            muted 
+            playsinline 
+            preload="auto"
+            tabindex="-1"
+            aria-label="Student studying quietly at desk">
+            <source src="assets/gemini_generated_video_c824c582.mp4" type="video/mp4" />
+            Your browser does not support HTML5 video.
+          </video>
+          <div class="auth-video-vignette"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <!-- Email verification prompt after signup -->
+    <div class="modal-overlay" id="email-confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="email-confirmation-title">
+      <div class="modal-window" style="max-width: 460px; padding: 28px; text-align: center;">
+        <div style="display: flex; justify-content: center; margin-bottom: 14px;">
+          <img src="assets/icons/Magical Fountain Pen and Open Book.webp" alt="FableFlow" class="guest-prompt-logo" />
+        </div>
+        <h3 id="email-confirmation-title" style="font-size: 1.25rem; font-weight: 850; color: var(--color-primary); margin-bottom: 10px;">Check your email to verify your account</h3>
+        <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 8px;">
+          We sent a confirmation link to <strong id="email-confirmation-address" style="color: var(--text-main);"></strong>.
+        </p>
+        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">
+          Open the email and follow its link to verify your address. If it is missing, check your spam folder.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button id="email-confirmation-open-inbox" class="btn-primary" style="padding: 12px; display: none;">Open your inbox</button>
+          <button id="email-confirmation-signin" class="btn-secondary" style="padding: 10px;">I’ve verified my email — sign in</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Friendly Guest Restricted Action Modal -->
+    <div class="modal-overlay" id="guest-prompt-modal">
+      <div class="modal-window" style="max-width: 440px; padding: 24px; text-align: center;">
+        <div style="display: flex; justify-content: center; margin-bottom: 14px;">
+          <img src="assets/icons/Magical Fountain Pen and Open Book.webp" alt="FableFlow" class="guest-prompt-logo" />
+        </div>
+        <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--color-primary); margin-bottom: 8px;" id="guest-prompt-title">Account Required</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;" id="guest-prompt-message">
+          You are currently browsing as a guest. To publish stories, participate in community discussions, join guilds, or follow authors, please sign in or create a free account.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button class="btn-primary" id="guest-prompt-signin-btn" style="padding: 12px; font-weight: 700;">
+            Sign In / Create Account
+          </button>
+          <button class="btn-secondary" id="guest-prompt-cancel-btn" style="padding: 10px;">
+            Continue Browsing as Guest
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Dictionary Entry Modal -->
+    <div class="modal-overlay" id="dict-modal">
+      <div class="modal-window" style="max-width: 440px; padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="font-size: 1.1rem; font-weight: 800;">Add Word to My Dictionary</h3>
+          <button onclick="document.getElementById('dict-modal').classList.remove('open')" style="font-size: 1.1rem;">✕</button>
+        </div>
+        <form id="add-dictionary-form">
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 0.75rem; font-weight: 700; display: block; margin-bottom: 4px;">Word / Phrase</label>
+            <input type="text" id="dict-input-word" class="search-input" placeholder="e.g. Halcyon" required />
+          </div>
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 0.75rem; font-weight: 700; display: block; margin-bottom: 4px;">Definition / Meaning</label>
+            <textarea id="dict-input-meaning" class="search-input" style="height: 60px; resize: none;" placeholder="Idyllically peaceful and tranquil..." required></textarea>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="font-size: 0.75rem; font-weight: 700; display: block; margin-bottom: 4px;">Personal Usage Example</label>
+            <input type="text" id="dict-input-example" class="search-input" placeholder="We spent halcyon afternoons under the willow tree..." />
+          </div>
+          <button type="submit" class="btn-primary" style="width: 100%;">Save to Dictionary</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         LITERARY FOOTER
+         ======================================================== -->
+    <footer class="fable-footer">
+      <div style="max-width: 1240px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <strong style="color: var(--text-main);">FableFlow</strong> • Where stories flow and creativity grows.
+          <p style="margin-top: 4px;">AI as a Co-Pilot for Creative Artists • Built with pure HTML5, CSS3 &amp; Vanilla JavaScript.</p>
+        </div>
+        <div>
+          <button class="genre-pill" data-nav-target="settings">Universal Accessibility Settings</button>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Vanilla Scripts in Dependency Order -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/backend.js"></script>
+  <script src="js/accessibility.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/auth-video.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/stories.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/community.js"></script>
+  <script src="js/learning.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/ai-assistant.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
