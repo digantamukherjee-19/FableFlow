@@ -120,6 +120,8 @@
          MAIN CONTENT AREA
          ======================================================== -->
     <main class="main-content">
+      <div id="backend-error-banner" role="alert" class="card" style="display: none; margin-bottom: 18px; border-color: var(--color-accent); color: var(--color-accent);"></div>
+      <div id="auth-success-banner" role="status" class="card" style="display: none; margin-bottom: 18px; border-color: var(--color-primary); color: var(--color-primary);"></div>
 
       <!-- ====================================================
            1. VIEW: HOME (Story Discovery)
@@ -615,6 +617,14 @@
           <p style="font-size: 0.82rem; color: var(--text-muted);">Typography preferences here update the entire website immediately.</p>
         </div>
 
+        <div class="card" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; padding: 18px;">
+          <div>
+            <h2 style="font-size: 1rem; font-weight: 800; margin-bottom: 4px;">Personalize your experience</h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">Choose the reading and display options that work best for you. These preferences are optional and can be changed any time.</p>
+          </div>
+          <button type="button" class="btn-primary" data-nav-target="home" style="padding: 10px 18px; white-space: nowrap;">Continue to Home →</button>
+        </div>
+
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
           
           <!-- Typography Card -->
@@ -681,9 +691,9 @@
             </div>
 
             <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color);">
-              <h4 style="font-size: 0.88rem; font-weight: 800; margin-bottom: 6px;">Client Authentication Note</h4>
+              <h4 style="font-size: 0.88rem; font-weight: 800; margin-bottom: 6px;">Account Security</h4>
               <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
-                This standalone version operates client-side with secure <code>localStorage</code> account sessions for static evaluation and VS Code Live Server testing.
+                FableFlow uses Supabase Auth for accounts. Your profile, reading preferences, and saved activity sync to your account.
               </p>
             </div>
           </div>
@@ -811,6 +821,7 @@
 
         <div style="padding: 24px;">
           <div id="auth-error-msg" style="display: none; padding: 10px; border-radius: 8px; background-color: var(--color-accent); color: var(--color-primary); font-size: 0.8rem; margin-bottom: 14px; font-weight: 700;"></div>
+          <div id="auth-success-msg" style="display: none; padding: 10px; border-radius: 8px; background-color: var(--bg-elevated); color: var(--color-primary); font-size: 0.8rem; margin-bottom: 14px; font-weight: 700;"></div>
 
           <!-- Login Form (No autofill, empty credentials) -->
           <form id="auth-login-form" autocomplete="off">
@@ -818,8 +829,8 @@
               Welcome back to FableFlow! Sign in to continue writing, participate in discussions, and manage your library.
             </p>
             <div style="margin-bottom: 12px;">
-              <label for="login-email" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Email or Username</label>
-              <input type="text" id="login-email" name="login-email" class="search-input" placeholder="Enter your email or username" autocomplete="off" value="" required />
+              <label for="login-email" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Email address</label>
+              <input type="email" id="login-email" name="login-email" class="search-input" placeholder="Enter your email address" autocomplete="off" value="" required />
             </div>
             <div style="margin-bottom: 16px;">
               <label for="login-password" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Password</label>
@@ -853,7 +864,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
               <div>
                 <label for="reg-password" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Password</label>
-                <input type="password" id="reg-password" name="reg-password" class="search-input" placeholder="At least 6 characters" autocomplete="new-password" value="" required />
+                <input type="password" id="reg-password" name="reg-password" class="search-input" placeholder="At least 8 characters" autocomplete="new-password" value="" required />
               </div>
               <div>
                 <label for="reg-confirm-password" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Confirm Password</label>
@@ -925,6 +936,26 @@
       </div>
     </div>
 
+    <!-- Email verification prompt after signup -->
+    <div class="modal-overlay" id="email-confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="email-confirmation-title">
+      <div class="modal-window" style="max-width: 460px; padding: 28px; text-align: center;">
+        <div style="display: flex; justify-content: center; margin-bottom: 14px;">
+          <img src="assets/icons/Magical Fountain Pen and Open Book.webp" alt="FableFlow" class="guest-prompt-logo" />
+        </div>
+        <h3 id="email-confirmation-title" style="font-size: 1.25rem; font-weight: 850; color: var(--color-primary); margin-bottom: 10px;">Check your email to verify your account</h3>
+        <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 8px;">
+          We sent a confirmation link to <strong id="email-confirmation-address" style="color: var(--text-main);"></strong>.
+        </p>
+        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">
+          Open the email and follow its link to verify your address. If it is missing, check your spam folder.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button id="email-confirmation-open-inbox" class="btn-primary" style="padding: 12px; display: none;">Open your inbox</button>
+          <button id="email-confirmation-signin" class="btn-secondary" style="padding: 10px;">I’ve verified my email — sign in</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Friendly Guest Restricted Action Modal -->
     <div class="modal-overlay" id="guest-prompt-modal">
       <div class="modal-window" style="max-width: 440px; padding: 24px; text-align: center;">
@@ -989,6 +1020,9 @@
   </div>
 
   <!-- Vanilla Scripts in Dependency Order -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/backend.js"></script>
   <script src="js/accessibility.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/navigation.js"></script>

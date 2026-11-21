@@ -9,6 +9,10 @@ FableFlow.Learning = (function() {
   const DICT_KEY = 'fableflow_user_dictionary';
   const FOCUS_KEY = 'fableflow_focus_sessions';
 
+  function escapeHtml(value) {
+    return FableFlow.Backend?.escapeHtml ? FableFlow.Backend.escapeHtml(value) : String(value ?? '');
+  }
+
   // Pomodoro State
   let timerPreset = 25;
   let timeLeft = 25 * 60;
@@ -73,7 +77,6 @@ FableFlow.Learning = (function() {
   let quizAnswered = false;
 
   function init() {
-    initDefaultData();
     bindEvents();
   }
 
@@ -219,14 +222,15 @@ FableFlow.Learning = (function() {
     } catch (e) {}
 
     // Save session
-    const sessions = JSON.parse(localStorage.getItem(FOCUS_KEY) || '[]');
-    sessions.unshift({
-      id: `f_${Date.now()}`,
-      duration: timerPreset,
-      activity: focusActivity,
-      completedAt: new Date().toISOString()
-    });
-    localStorage.setItem(FOCUS_KEY, JSON.stringify(sessions));
+    if (FableFlow.Backend?.isReady()) {
+      FableFlow.Backend.saveFocusSession(focusActivity, timerPreset)
+        .then(renderFocusHistory)
+        .catch(error => console.error('Could not save focus session', error));
+    } else {
+      const sessions = JSON.parse(localStorage.getItem(FOCUS_KEY) || '[]');
+      sessions.unshift({ id: `f_${Date.now()}`, duration: timerPreset, activity: focusActivity, completedAt: new Date().toISOString() });
+      localStorage.setItem(FOCUS_KEY, JSON.stringify(sessions));
+    }
 
     alert(`🎉 Focus Sprint Completed! You completed a ${timerPreset}-minute ${focusActivity} session.`);
     resetTimer();
@@ -264,7 +268,9 @@ FableFlow.Learning = (function() {
   }
 
   function renderFocusHistory() {
-    const sessions = JSON.parse(localStorage.getItem(FOCUS_KEY) || '[]');
+    const sessions = FableFlow.Backend?.isReady()
+      ? FableFlow.Backend.getFocusSessions()
+      : JSON.parse(localStorage.getItem(FOCUS_KEY) || '[]');
     const totalMins = sessions.reduce((acc, s) => acc + (s.duration || 0), 0);
 
     const totalEl = document.getElementById('focus-total-minutes');
@@ -401,7 +407,9 @@ FableFlow.Learning = (function() {
     const listEl = document.getElementById('dictionary-entries-list');
     if (!listEl) return;
 
-    let entries = JSON.parse(localStorage.getItem(DICT_KEY) || '[]');
+    let entries = FableFlow.Backend?.isReady()
+      ? FableFlow.Backend.getDictionary()
+      : JSON.parse(localStorage.getItem(DICT_KEY) || '[]');
     if (sortBy === 'alpha') {
       entries.sort((a, b) => a.word.localeCompare(b.word));
     } else {
@@ -420,9 +428,9 @@ FableFlow.Learning = (function() {
     listEl.innerHTML = entries.map(item => `
       <div class="dict-entry-card">
         <div>
-          <h4 class="dict-word-title">${item.word}</h4>
-          <p class="dict-meaning-text">${item.meaning}</p>
-          ${item.example ? `<p class="dict-example-text">Personal Usage: "${item.example}"</p>` : ''}
+          <h4 class="dict-word-title">${escapeHtml(item.word)}</h4>
+          <p class="dict-meaning-text">${escapeHtml(item.meaning)}</p>
+          ${item.example ? `<p class="dict-example-text">Personal Usage: "${escapeHtml(item.example)}"</p>` : ''}
         </div>
         <button class="dict-delete-btn" onclick="FableFlow.Learning.deleteDictEntry('${item.id}')" title="Delete word">✕</button>
       </div>
@@ -431,6 +439,12 @@ FableFlow.Learning = (function() {
 
   function addDictEntry(word, meaning, example) {
     if (!word.trim() || !meaning.trim()) return;
+    if (FableFlow.Backend?.isReady()) {
+      FableFlow.Backend.addDictionaryEntry(word.trim(), meaning.trim(), example ? example.trim() : '')
+        .then(() => renderDictionary())
+        .catch(error => console.error('Could not save dictionary entry', error));
+      return;
+    }
     const entries = JSON.parse(localStorage.getItem(DICT_KEY) || '[]');
     entries.unshift({
       id: `d_${Date.now()}`,
@@ -445,6 +459,12 @@ FableFlow.Learning = (function() {
 
   function deleteDictEntry(id) {
     if (!confirm('Remove this word from your dictionary?')) return;
+    if (FableFlow.Backend?.isReady()) {
+      FableFlow.Backend.deleteDictionaryEntry(id)
+        .then(() => renderDictionary())
+        .catch(error => console.error('Could not delete dictionary entry', error));
+      return;
+    }
     let entries = JSON.parse(localStorage.getItem(DICT_KEY) || '[]');
     entries = entries.filter(e => e.id !== id);
     localStorage.setItem(DICT_KEY, JSON.stringify(entries));

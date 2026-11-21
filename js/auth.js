@@ -1,215 +1,245 @@
 /**
- * FableFlow Authentication & Onboarding Portal
- * Manages registered user sessions, guest exploration sessions, registration
- * with accessibility preferences, and demo accounts via localStorage.
+ * FableFlow authentication backed by Supabase Auth.
+ * Guest sessions remain local; registered accounts use Supabase-managed sessions.
  */
-
 window.FableFlow = window.FableFlow || {};
 
 FableFlow.Auth = (function() {
-  const STORAGE_KEY = 'fableflow_current_user';
-  const USERS_KEY = 'fableflow_users';
   const SESSION_TYPE_KEY = 'fableflow_session_type';
-
   let currentUser = null;
+  let entryLoginRequired = false;
+  let emailInboxUrl = null;
 
-  function init() {
-    initDefaultUsers();
-    restoreSession();
+  async function init() {
+    const client = FableFlow.Backend.getClient();
     bindEvents();
-    updateUI();
-  }
+    const { data, error } = await client.auth.getSession();
+    if (error) throw error;
 
-  function initDefaultUsers() {
-    if (!localStorage.getItem(USERS_KEY)) {
-      const defaultUsers = [
-        {
-          id: 'usr_author_1',
-          username: 'ElenaVance',
-          email: 'elena@fableflow.com',
-          password: 'password123',
-          bio: 'Fantasy author & mythmaker. Crafting worlds where starlight bends and ancient dragons remember.',
-          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-          followersCount: 1420,
-          followingCount: 88,
-          totalReads: 85200,
-          favouriteGenres: ['Fantasy', 'Adventure', 'Mystery'],
-          preferences: {
-            fontFamily: 'lexend',
-            fontSize: 16,
-            lineSpacing: 1.6,
-            wordSpacing: 1,
-            theme: 'light'
-          }
-        },
-        {
-          id: 'usr_author_2',
-          username: 'MarcusSterling',
-          email: 'marcus@fableflow.com',
-          password: 'password123',
-          bio: 'Cyberpunk & Sci-Fi dreamer. Obsessed with neural networks, neon alleys, and space opera.',
-          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-          followersCount: 950,
-          followingCount: 42,
-          totalReads: 49100,
-          favouriteGenres: ['Science Fiction', 'Thriller'],
-          preferences: {
-            fontFamily: 'georgia',
-            fontSize: 16,
-            lineSpacing: 1.5,
-            wordSpacing: 0.5,
-            theme: 'dark'
-          }
-        }
-      ];
-      localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers));
-    }
-  }
-
-  function restoreSession() {
-    try {
-      const sessionType = localStorage.getItem(SESSION_TYPE_KEY);
-      if (sessionType === 'guest') {
-        currentUser = {
-          id: 'usr_guest',
-          username: 'Guest',
-          email: 'guest@fableflow.com',
-          bio: 'Browsing FableFlow as a Guest',
-          avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest',
-          isGuest: true
-        };
-        return;
-      }
-
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        currentUser = JSON.parse(saved);
-        if (currentUser) {
-          currentUser.isGuest = false;
-          if (currentUser.preferences && FableFlow.Accessibility) {
-            FableFlow.Accessibility.setFontFamily(currentUser.preferences.fontFamily);
-            FableFlow.Accessibility.setFontSize(currentUser.preferences.fontSize);
-            FableFlow.Accessibility.setLineSpacing(currentUser.preferences.lineSpacing);
-            FableFlow.Accessibility.setWordSpacing(currentUser.preferences.wordSpacing);
-          }
-        }
-      } else {
-        currentUser = null;
-      }
-    } catch (e) {
-      console.warn('Session restore failed', e);
+    if (data.session?.user) {
+      await establishUser(data.session.user, false);
+      entryLoginRequired = false;
+    } else if (localStorage.getItem(SESSION_TYPE_KEY) === 'guest') {
+      currentUser = createGuestUser();
+      entryLoginRequired = false;
+    } else {
       currentUser = null;
-    }
-  }
-
-  function getUsers() {
-    try {
-      return JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-    } catch (e) {
-      return [];
-    }
-  }
-
-  function login(usernameOrEmail, password) {
-    const users = getUsers();
-    const q = usernameOrEmail.trim().toLowerCase();
-    const user = users.find(u => u.username.toLowerCase() === q || u.email.toLowerCase() === q);
-
-    if (!user || user.password !== password) {
-      throw new Error('Invalid email, username, or password. Please try again.');
-    }
-
-    user.isGuest = false;
-    currentUser = user;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    localStorage.setItem(SESSION_TYPE_KEY, 'user');
-
-    if (user.preferences && FableFlow.Accessibility) {
-      FableFlow.Accessibility.setFontFamily(user.preferences.fontFamily);
-      FableFlow.Accessibility.setFontSize(user.preferences.fontSize);
-      FableFlow.Accessibility.setLineSpacing(user.preferences.lineSpacing);
-      FableFlow.Accessibility.setWordSpacing(user.preferences.wordSpacing);
+      entryLoginRequired = true;
     }
 
     updateUI();
-    closeModal();
-    return user;
+
+    client.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        currentUser = null;
+        updateUI();
+      }
+    });
   }
 
-  function register(username, email, password, confirmPassword, preferences) {
-    if (!username.trim() || !email.trim() || !password) {
-      throw new Error('All fields are required.');
-    }
-    if (password.length < 6) {
-      throw new Error('Password must be at least 6 characters.');
-    }
-    if (password !== confirmPassword) {
-      throw new Error('Passwords do not match.');
-    }
-
-    const users = getUsers();
-    if (users.some(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
-      throw new Error('Username already exists.');
-    }
-
-    const newUser = {
-      id: `usr_${Date.now()}`,
-      username: username.trim(),
-      email: email.trim().toLowerCase(),
-      password,
-      bio: 'Storywriter & passionate reader on FableFlow.',
-      avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`,
-      followersCount: 0,
-      followingCount: 0,
-      totalReads: 0,
-      favouriteGenres: ['Fantasy', 'Romance'],
-      preferences: preferences || (FableFlow.Accessibility ? FableFlow.Accessibility.getPreferences() : null),
-      createdAt: new Date().toISOString(),
-      isGuest: false
-    };
-
-    users.push(newUser);
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-
-    currentUser = newUser;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newUser));
-    localStorage.setItem(SESSION_TYPE_KEY, 'user');
-
-    updateUI();
-    closeModal();
-    return newUser;
-  }
-
-  function continueAsGuest() {
-    currentUser = {
+  function createGuestUser() {
+    return {
       id: 'usr_guest',
       username: 'Guest',
       email: 'guest@fableflow.com',
       bio: 'Browsing FableFlow in Guest Mode',
       avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest',
+      preferences: FableFlow.Accessibility?.getPreferences(),
       isGuest: true
     };
-    localStorage.setItem(SESSION_TYPE_KEY, 'guest');
-    localStorage.removeItem(STORAGE_KEY);
+  }
 
-    updateUI();
-    closeModal();
-
-    if (window.FableFlow.Navigation) {
-      window.FableFlow.Navigation.navigateTo('home');
+  async function establishUser(authUser, loadData = true) {
+    const profile = await FableFlow.Backend.getProfile(authUser.id);
+    if (!profile) {
+      throw new Error('Your account profile is still being prepared. Please try signing in again in a moment.');
     }
+
+    currentUser = {
+      id: authUser.id,
+      username: profile.username,
+      email: authUser.email || '',
+      bio: profile.bio,
+      avatar: profile.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(profile.username)}`,
+      preferences: profile.preferences || {},
+      createdAt: profile.createdAt,
+      isGuest: false
+    };
+    localStorage.removeItem(SESSION_TYPE_KEY);
+
+    const preferences = currentUser.preferences;
+    if (preferences && FableFlow.Accessibility) {
+      FableFlow.Accessibility.setPreferences(preferences, { persist: false });
+    }
+
+    if (loadData) {
+      await FableFlow.Backend.loadCatalog();
+      await FableFlow.Backend.loadUserData();
+    }
+    updateUI();
     return currentUser;
   }
 
-  function logout() {
-    currentUser = null;
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(SESSION_TYPE_KEY);
-    updateUI();
-    if (window.FableFlow.Navigation) {
-      window.FableFlow.Navigation.navigateTo('home');
+  function setAuthError(message) {
+    const errBox = document.getElementById('auth-error-msg');
+    const successBox = document.getElementById('auth-success-msg');
+    if (successBox) successBox.style.display = 'none';
+    if (errBox) {
+      errBox.textContent = message;
+      errBox.style.display = 'block';
     }
-    openModal('login');
+  }
+
+  function setAuthSuccess(message) {
+    const errBox = document.getElementById('auth-error-msg');
+    const successBox = document.getElementById('auth-success-msg');
+    if (errBox) errBox.style.display = 'none';
+    if (successBox) {
+      successBox.textContent = message;
+      successBox.style.display = 'block';
+    }
+  }
+
+  function hideAuthSuccessBanner() {
+    const banner = document.getElementById('auth-success-banner');
+    if (banner) banner.style.display = 'none';
+  }
+
+  function showEmailConfirmation(email) {
+    const modal = document.getElementById('email-confirmation-modal');
+    const address = document.getElementById('email-confirmation-address');
+    const inboxButton = document.getElementById('email-confirmation-open-inbox');
+    if (!modal) return;
+
+    if (address) address.textContent = email;
+    const domain = String(email || '').split('@').pop().toLowerCase();
+    const inboxes = {
+      'gmail.com': 'https://mail.google.com/mail/u/0/#inbox',
+      'googlemail.com': 'https://mail.google.com/mail/u/0/#inbox',
+      'outlook.com': 'https://outlook.live.com/mail/0/',
+      'hotmail.com': 'https://outlook.live.com/mail/0/',
+      'live.com': 'https://outlook.live.com/mail/0/',
+      'yahoo.com': 'https://mail.yahoo.com/',
+      'icloud.com': 'https://www.icloud.com/mail',
+      'me.com': 'https://www.icloud.com/mail',
+      'proton.me': 'https://mail.proton.me/',
+      'protonmail.com': 'https://mail.proton.me/'
+    };
+    emailInboxUrl = inboxes[domain] || null;
+    if (inboxButton) inboxButton.style.display = emailInboxUrl ? 'inline-flex' : 'none';
+    modal.classList.add('open');
+  }
+
+  function closeEmailConfirmation() {
+    const modal = document.getElementById('email-confirmation-modal');
+    if (modal) modal.classList.remove('open');
+  }
+
+  function openEmailInbox() {
+    if (emailInboxUrl) window.open(emailInboxUrl, '_blank', 'noopener,noreferrer');
+  }
+
+  async function login(email, password) {
+    const normalizedEmail = (email || '').trim().toLowerCase();
+    if (!normalizedEmail || !password) throw new Error('Enter your email address and password.');
+
+    const { data, error } = await FableFlow.Backend.getClient().auth.signInWithPassword({
+      email: normalizedEmail,
+      password
+    });
+    if (error) throw new Error('Could not sign in. Check your email and password, then try again.');
+
+    await establishUser(data.user, true);
+    entryLoginRequired = false;
+    hideAuthSuccessBanner();
+    closeModal();
+    if (window.FableFlow.Navigation) window.FableFlow.Navigation.navigateTo('settings');
+    return currentUser;
+  }
+
+  async function register(username, email, password, confirmPassword, preferences) {
+    const cleanUsername = (username || '').trim();
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanUsername || !cleanEmail || !password) throw new Error('All fields are required.');
+    if (!/^[A-Za-z0-9._-]{3,30}$/.test(cleanUsername)) {
+      throw new Error('Use 3–30 characters for your username: letters, numbers, dots, underscores, or hyphens.');
+    }
+    if (password.length < 8) throw new Error('Password must be at least 8 characters.');
+    if (password !== confirmPassword) throw new Error('Passwords do not match.');
+    if (!(await FableFlow.Backend.usernameAvailable(cleanUsername))) {
+      throw new Error('That username is already in use. Please choose another.');
+    }
+
+    const options = {
+      data: {
+        username: cleanUsername,
+        bio: 'Storywriter & passionate reader on FableFlow.',
+        avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(cleanUsername)}`,
+        preferences: preferences || FableFlow.Accessibility?.getPreferences() || {}
+      }
+    };
+    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+      options.emailRedirectTo = `${window.location.origin}${window.location.pathname}`;
+    }
+
+    const { data, error } = await FableFlow.Backend.getClient().auth.signUp({
+      email: cleanEmail,
+      password,
+      options
+    });
+    if (error) throw new Error(error.message || 'Account creation failed. Please try again.');
+
+    if (!data.session) {
+      const message = 'Your account was created. Check your email to confirm it, then sign in.';
+      setAuthSuccess(message);
+      const banner = document.getElementById('auth-success-banner');
+      if (banner) {
+        banner.textContent = message;
+        banner.style.display = 'block';
+      }
+      entryLoginRequired = false;
+      closeModal();
+      if (window.FableFlow.Navigation) window.FableFlow.Navigation.navigateTo('home');
+      showEmailConfirmation(cleanEmail);
+      return null;
+    }
+
+    await establishUser(data.user, true);
+    entryLoginRequired = false;
+    hideAuthSuccessBanner();
+    closeModal();
+    if (window.FableFlow.Navigation) window.FableFlow.Navigation.navigateTo('home');
+    return currentUser;
+  }
+
+  async function continueAsGuest() {
+    currentUser = createGuestUser();
+    localStorage.setItem(SESSION_TYPE_KEY, 'guest');
+    entryLoginRequired = false;
+    await FableFlow.Backend.loadUserData();
+    updateUI();
+    closeModal();
+    if (window.FableFlow.Navigation) window.FableFlow.Navigation.navigateTo('settings');
+    return currentUser;
+  }
+
+  async function logout() {
+    try {
+      await FableFlow.Backend.getClient().auth.signOut();
+    } catch (error) {
+      console.warn('Supabase sign-out failed', error);
+    }
+    currentUser = null;
+    localStorage.removeItem(SESSION_TYPE_KEY);
+    try {
+      await FableFlow.Backend.loadUserData();
+    } catch (error) {
+      console.warn('Could not clear the previous account data from memory', error);
+    }
+    entryLoginRequired = true;
+    updateUI();
+    if (window.FableFlow.Navigation) window.FableFlow.Navigation.navigateTo('home');
+    openModal('login', { required: true });
   }
 
   function updateUI() {
@@ -218,71 +248,52 @@ FableFlow.Auth = (function() {
     const userNameSpan = document.getElementById('nav-username');
     const userAvatarImg = document.getElementById('nav-user-avatar');
 
-    if (currentUser) {
-      if (currentUser.isGuest) {
-        // Guest mode: show "Guest" badge with guest avatar, AND keep "Sign In / Sign Up" buttons visible
-        if (authActions) authActions.style.display = 'flex';
-        if (userBadge) {
-          userBadge.style.display = 'flex';
-          userBadge.title = 'Browsing as Guest (Click to view Settings)';
-          if (userNameSpan) userNameSpan.textContent = 'Guest';
-          if (userAvatarImg) userAvatarImg.src = currentUser.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest';
-        }
-      } else {
-        // Registered mode
-        if (authActions) authActions.style.display = 'none';
-        if (userBadge) {
-          userBadge.style.display = 'flex';
-          userBadge.title = `Signed in as ${currentUser.username} (Go to Dashboard)`;
-          if (userNameSpan) userNameSpan.textContent = currentUser.username;
-          if (userAvatarImg) userAvatarImg.src = currentUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.username}`;
-        }
-      }
-    } else {
-      // Logged out
+    if (!currentUser) {
       if (authActions) authActions.style.display = 'flex';
       if (userBadge) userBadge.style.display = 'none';
+      return;
     }
+
+    if (currentUser.isGuest) {
+      if (authActions) authActions.style.display = 'flex';
+      if (userBadge) userBadge.title = 'Browsing as Guest (Click to view Settings)';
+    } else {
+      if (authActions) authActions.style.display = 'none';
+      if (userBadge) userBadge.title = `Signed in as ${currentUser.username} (Go to Dashboard)`;
+    }
+    if (userBadge) userBadge.style.display = 'flex';
+    if (userNameSpan) userNameSpan.textContent = currentUser.username;
+    if (userAvatarImg) userAvatarImg.src = currentUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUser.username)}`;
   }
 
-  function openModal(mode = 'login') {
+  function openModal(mode = 'login', options = {}) {
     const modal = document.getElementById('auth-modal');
     if (!modal) return;
     modal.classList.add('open');
 
-    // Keep all fields completely empty when the login or signup page opens
-    const loginEmail = document.getElementById('login-email');
-    const loginPass = document.getElementById('login-password');
-    if (loginEmail) loginEmail.value = '';
-    if (loginPass) loginPass.value = '';
+    const closeBtn = document.getElementById('auth-modal-close');
+    if (closeBtn) closeBtn.style.display = (entryLoginRequired || options.required) ? 'none' : '';
 
-    const regUser = document.getElementById('reg-username');
-    const regEmail = document.getElementById('reg-email');
-    const regPass = document.getElementById('reg-password');
-    const regConfirm = document.getElementById('reg-confirm-password');
-    if (regUser) regUser.value = '';
-    if (regEmail) regEmail.value = '';
-    if (regPass) regPass.value = '';
-    if (regConfirm) regConfirm.value = '';
+    ['login-email', 'login-password', 'reg-username', 'reg-email', 'reg-password', 'reg-confirm-password']
+      .forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.value = '';
+      });
 
     const loginTab = document.getElementById('auth-tab-login');
     const registerTab = document.getElementById('auth-tab-register');
     const loginForm = document.getElementById('auth-login-form');
     const registerForm = document.getElementById('auth-register-form');
     const errBox = document.getElementById('auth-error-msg');
+    const successBox = document.getElementById('auth-success-msg');
     if (errBox) errBox.style.display = 'none';
+    if (successBox) successBox.style.display = 'none';
 
-    if (mode === 'register') {
-      if (loginTab) loginTab.classList.remove('active');
-      if (registerTab) registerTab.classList.add('active');
-      if (loginForm) loginForm.style.display = 'none';
-      if (registerForm) registerForm.style.display = 'block';
-    } else {
-      if (loginTab) loginTab.classList.add('active');
-      if (registerTab) registerTab.classList.remove('active');
-      if (loginForm) loginForm.style.display = 'block';
-      if (registerForm) registerForm.style.display = 'none';
-    }
+    const isRegister = mode === 'register';
+    if (loginTab) loginTab.classList.toggle('active', !isRegister);
+    if (registerTab) registerTab.classList.toggle('active', isRegister);
+    if (loginForm) loginForm.style.display = isRegister ? 'none' : 'block';
+    if (registerForm) registerForm.style.display = isRegister ? 'block' : 'none';
   }
 
   function closeModal() {
@@ -314,116 +325,82 @@ FableFlow.Auth = (function() {
   }
 
   function bindEvents() {
-    // Open modal buttons
     const signinBtn = document.getElementById('nav-signin-btn');
     const signupBtn = document.getElementById('nav-signup-btn');
     if (signinBtn) signinBtn.addEventListener('click', () => openModal('login'));
     if (signupBtn) signupBtn.addEventListener('click', () => openModal('register'));
 
-    // Modal close button
     const closeBtn = document.getElementById('auth-modal-close');
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
 
-    // Tab buttons
     const loginTab = document.getElementById('auth-tab-login');
     const registerTab = document.getElementById('auth-tab-register');
     if (loginTab) loginTab.addEventListener('click', () => openModal('login'));
     if (registerTab) registerTab.addEventListener('click', () => openModal('register'));
 
-    // Continue as Guest buttons (on both forms)
-    const guestLoginBtn = document.getElementById('auth-guest-btn-login');
-    const guestRegBtn = document.getElementById('auth-guest-btn-register');
-    if (guestLoginBtn) guestLoginBtn.addEventListener('click', continueAsGuest);
-    if (guestRegBtn) guestRegBtn.addEventListener('click', continueAsGuest);
+    const guestButtons = [document.getElementById('auth-guest-btn-login'), document.getElementById('auth-guest-btn-register')];
+    guestButtons.forEach(button => button?.addEventListener('click', () => continueAsGuest().catch(error => setAuthError(error.message))));
 
-    // Guest prompt modal buttons
     const promptSigninBtn = document.getElementById('guest-prompt-signin-btn');
     const promptCancelBtn = document.getElementById('guest-prompt-cancel-btn');
-    if (promptSigninBtn) {
-      promptSigninBtn.addEventListener('click', () => {
-        closeGuestPrompt();
-        openModal('login');
-      });
-    }
-    if (promptCancelBtn) {
-      promptCancelBtn.addEventListener('click', closeGuestPrompt);
-    }
+    if (promptSigninBtn) promptSigninBtn.addEventListener('click', () => { closeGuestPrompt(); openModal('login'); });
+    if (promptCancelBtn) promptCancelBtn.addEventListener('click', closeGuestPrompt);
 
-    // Login Form Submit
+    const openInboxBtn = document.getElementById('email-confirmation-open-inbox');
+    const confirmationSigninBtn = document.getElementById('email-confirmation-signin');
+    if (openInboxBtn) openInboxBtn.addEventListener('click', openEmailInbox);
+    if (confirmationSigninBtn) confirmationSigninBtn.addEventListener('click', () => {
+      closeEmailConfirmation();
+      openModal('login');
+    });
+
     const loginForm = document.getElementById('auth-login-form');
-    if (loginForm) {
-      loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value;
-        const pass = document.getElementById('login-password').value;
-        const errBox = document.getElementById('auth-error-msg');
-        try {
-          login(email, pass);
-        } catch (err) {
-          if (errBox) {
-            errBox.textContent = err.message;
-            errBox.style.display = 'block';
-          }
-        }
-      });
-    }
+    if (loginForm) loginForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      try {
+        await login(document.getElementById('login-email').value, document.getElementById('login-password').value);
+      } catch (error) {
+        setAuthError(error.message);
+      }
+    });
 
-
-    // Register Form Submit
     const registerForm = document.getElementById('auth-register-form');
-    if (registerForm) {
-      registerForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const username = document.getElementById('reg-username').value;
-        const email = document.getElementById('reg-email').value;
-        const pass = document.getElementById('reg-password').value;
-        const confirmPass = document.getElementById('reg-confirm-password').value;
-        const errBox = document.getElementById('auth-error-msg');
+    if (registerForm) registerForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      try {
+        const preferences = FableFlow.Accessibility?.getPreferences() || {};
+        await register(
+          document.getElementById('reg-username').value,
+          document.getElementById('reg-email').value,
+          document.getElementById('reg-password').value,
+          document.getElementById('reg-confirm-password').value,
+          preferences
+        );
+      } catch (error) {
+        setAuthError(error.message);
+      }
+    });
 
-        const currentPrefs = FableFlow.Accessibility ? FableFlow.Accessibility.getPreferences() : null;
-
-        try {
-          register(username, email, pass, confirmPass, currentPrefs);
-        } catch (err) {
-          if (errBox) {
-            errBox.textContent = err.message;
-            errBox.style.display = 'block';
-          }
-        }
-      });
-    }
-
-    // Live Onboarding Typography sliders inside Register tab
     const fontSelect = document.getElementById('reg-pref-font');
-    if (fontSelect && FableFlow.Accessibility) {
-      fontSelect.addEventListener('change', (e) => {
-        FableFlow.Accessibility.setFontFamily(e.target.value);
-      });
-    }
+    if (fontSelect) fontSelect.addEventListener('change', event => FableFlow.Accessibility?.setFontFamily(event.target.value));
     const sizeRange = document.getElementById('reg-pref-size');
-    if (sizeRange && FableFlow.Accessibility) {
-      sizeRange.addEventListener('input', (e) => {
-        FableFlow.Accessibility.setFontSize(e.target.value);
-        const disp = document.getElementById('reg-pref-size-val');
-        if (disp) disp.textContent = `${e.target.value}px`;
-      });
-    }
+    if (sizeRange) sizeRange.addEventListener('input', event => {
+      FableFlow.Accessibility?.setFontSize(event.target.value);
+      const display = document.getElementById('reg-pref-size-val');
+      if (display) display.textContent = `${event.target.value}px`;
+    });
     const lineRange = document.getElementById('reg-pref-line');
-    if (lineRange && FableFlow.Accessibility) {
-      lineRange.addEventListener('input', (e) => {
-        FableFlow.Accessibility.setLineSpacing(e.target.value);
-        const disp = document.getElementById('reg-pref-line-val');
-        if (disp) disp.textContent = `${e.target.value}x`;
-      });
-    }
+    if (lineRange) lineRange.addEventListener('input', event => {
+      FableFlow.Accessibility?.setLineSpacing(event.target.value);
+      const display = document.getElementById('reg-pref-line-val');
+      if (display) display.textContent = `${event.target.value}x`;
+    });
     const wordRange = document.getElementById('reg-pref-word');
-    if (wordRange && FableFlow.Accessibility) {
-      wordRange.addEventListener('input', (e) => {
-        FableFlow.Accessibility.setWordSpacing(e.target.value);
-        const disp = document.getElementById('reg-pref-word-val');
-        if (disp) disp.textContent = `${e.target.value}px`;
-      });
-    }
+    if (wordRange) wordRange.addEventListener('input', event => {
+      FableFlow.Accessibility?.setWordSpacing(event.target.value);
+      const display = document.getElementById('reg-pref-word-val');
+      if (display) display.textContent = `${event.target.value}px`;
+    });
   }
 
   return {

@@ -25,7 +25,17 @@ FableFlow.Navigation = (function() {
   function init() {
     bindNavLinks();
     initNavbarSearch();
-    handleHashChange();
+
+    // Make sign-in and accessibility preferences the entry flow on every visit.
+    if (window.FableFlow.Auth && window.FableFlow.Auth.getCurrentUser()) {
+      navigateTo('settings');
+    } else {
+      navigateTo('home');
+      if (window.FableFlow.Auth) {
+        window.FableFlow.Auth.openModal('login', { required: true });
+      }
+    }
+
     window.addEventListener('hashchange', handleHashChange);
   }
 
@@ -308,10 +318,19 @@ FableFlow.Navigation = (function() {
 
     // 2. Match Authors
     let allUsers = [];
-    try {
-      allUsers = JSON.parse(localStorage.getItem('fableflow_users') || '[]');
-    } catch (e) {
-      allUsers = [];
+    if (window.FableFlow.Backend?.isReady()) {
+      allUsers = window.FableFlow.Backend.getProfiles().map(profile => ({
+        id: profile.id,
+        username: profile.username,
+        avatar: profile.avatar_url,
+        bio: profile.bio
+      }));
+    } else {
+      try {
+        allUsers = JSON.parse(localStorage.getItem('fableflow_users') || '[]');
+      } catch (e) {
+        allUsers = [];
+      }
     }
 
     const authorMap = new Map();
@@ -382,8 +401,8 @@ FableFlow.Navigation = (function() {
       `;
       matchedStories.forEach(story => {
         html += `
-          <div class="nav-search-item story-item" data-action="story" data-id="${story.id}" role="button" tabindex="0">
-            <img src="${story.coverImage || 'assets/icons/Magical Fountain Pen and Open Book.webp'}" class="nav-search-thumb" alt="" onerror="this.src='assets/icons/Magical Fountain Pen and Open Book.webp'" />
+          <div class="nav-search-item story-item" data-action="story" data-id="${escapeHtml(story.id)}" role="button" tabindex="0">
+            <img src="${window.FableFlow.Backend?.safeHttpUrl(story.coverImage) || 'assets/icons/Magical Fountain Pen and Open Book.webp'}" class="nav-search-thumb" alt="" onerror="this.src='assets/icons/Magical Fountain Pen and Open Book.webp'" />
             <div class="nav-search-info">
               <div class="nav-search-title">${escapeHtml(story.title)}</div>
               <div class="nav-search-meta">by <strong>${escapeHtml(story.authorName || 'Author')}</strong> • <span class="nav-search-genre-badge">${escapeHtml(story.genre || 'Story')}</span></div>
@@ -404,8 +423,8 @@ FableFlow.Navigation = (function() {
       `;
       matchedAuthors.forEach(author => {
         html += `
-          <div class="nav-search-item author-item" data-action="author" data-id="${author.id}" role="button" tabindex="0">
-            <img src="${author.avatar || 'assets/icons/Magical Fountain Pen and Open Book.webp'}" class="nav-search-avatar" alt="" onerror="this.src='assets/icons/Magical Fountain Pen and Open Book.webp'" />
+          <div class="nav-search-item author-item" data-action="author" data-id="${escapeHtml(author.id)}" role="button" tabindex="0">
+            <img src="${window.FableFlow.Backend?.safeHttpUrl(author.avatar) || 'assets/icons/Magical Fountain Pen and Open Book.webp'}" class="nav-search-avatar" alt="" onerror="this.src='assets/icons/Magical Fountain Pen and Open Book.webp'" />
             <div class="nav-search-info">
               <div class="nav-search-title">${escapeHtml(author.name)}</div>
               <div class="nav-search-meta">${escapeHtml(author.bio)}</div>
@@ -425,7 +444,7 @@ FableFlow.Navigation = (function() {
       `;
       matchedGenres.forEach(genre => {
         html += `
-          <div class="nav-search-item genre-item" data-action="genre" data-genre="${genre.name}" role="button" tabindex="0">
+          <div class="nav-search-item genre-item" data-action="genre" data-genre="${escapeHtml(genre.name)}" role="button" tabindex="0">
             <div class="nav-search-genre-icon" aria-hidden="true">🏷️</div>
             <div class="nav-search-info">
               <div class="nav-search-title">${escapeHtml(genre.name)}</div>

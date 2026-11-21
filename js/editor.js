@@ -9,6 +9,10 @@ FableFlow.Editor = (function() {
   const STORIES_KEY = 'fableflow_stories';
   const CHAPTERS_KEY = 'fableflow_chapters';
 
+  function escapeHtml(value) {
+    return FableFlow.Backend?.escapeHtml ? FableFlow.Backend.escapeHtml(value) : String(value ?? '');
+  }
+
   let currentStoryId = null;
   let activeChapterIndex = 0;
   let currentChapters = [];
@@ -28,7 +32,9 @@ FableFlow.Editor = (function() {
 
   function render(storyId) {
     currentStoryId = storyId || null;
-    const allStories = JSON.parse(localStorage.getItem(STORIES_KEY) || '[]');
+    const allStories = FableFlow.Backend?.isReady()
+      ? FableFlow.Stories.getStories()
+      : JSON.parse(localStorage.getItem(STORIES_KEY) || '[]');
     const existingStory = allStories.find(s => s.id === currentStoryId);
 
     const titleInput = document.getElementById('editor-story-title');
@@ -44,8 +50,10 @@ FableFlow.Editor = (function() {
       if (tagsInput) tagsInput.value = (existingStory.tags || []).join(', ');
       if (coverInput) coverInput.value = existingStory.coverImage;
 
-      const allChapters = JSON.parse(localStorage.getItem(CHAPTERS_KEY) || '[]');
-      currentChapters = allChapters.filter(c => c.storyId === existingStory.id).sort((a,b) => a.chapterNumber - b.chapterNumber);
+      const allChapters = FableFlow.Backend?.isReady()
+        ? FableFlow.Stories.getChapters(existingStory.id)
+        : JSON.parse(localStorage.getItem(CHAPTERS_KEY) || '[]').filter(c => c.storyId === existingStory.id);
+      currentChapters = allChapters.sort((a,b) => a.chapterNumber - b.chapterNumber);
       if (currentChapters.length === 0) {
         currentChapters = [createDefaultChapter(existingStory.id, 1)];
       }
@@ -141,6 +149,11 @@ FableFlow.Editor = (function() {
       return;
     }
 
+    if (FableFlow.Backend?.isReady()) {
+      saveStoryToBackend(publish, title);
+      return;
+    }
+
     const allStories = JSON.parse(localStorage.getItem(STORIES_KEY) || '[]');
     const user = FableFlow.Auth.getCurrentUser();
 
@@ -195,6 +208,41 @@ FableFlow.Editor = (function() {
     }
   }
 
+  async function saveStoryToBackend(publish, title) {
+    saveActiveChapterInMemory();
+    const user = FableFlow.Auth.getCurrentUser();
+    const existing = FableFlow.Stories.getStories().find(story => story.id === currentStoryId && story.authorId === user.id);
+    const story = {
+      id: existing ? currentStoryId : null,
+      title,
+      description: document.getElementById('editor-story-desc')?.value.trim() || '',
+      coverImage: document.getElementById('editor-story-cover')?.value || PRESET_COVERS[0],
+      genre: document.getElementById('editor-story-genre')?.value || 'Fantasy',
+      tags: (document.getElementById('editor-story-tags')?.value || '').split(',').map(tag => tag.trim()).filter(Boolean),
+      status: publish ? 'published' : (existing?.status || 'draft'),
+      visibility: existing?.visibility || 'public'
+    };
+
+    const statusEl = document.getElementById('editor-save-status');
+    if (statusEl) statusEl.textContent = 'Saving to your FableFlow account…';
+    try {
+      currentStoryId = await FableFlow.Backend.saveStory(story, currentChapters);
+      currentChapters = FableFlow.Stories.getChapters(currentStoryId);
+      if (!currentChapters.length) currentChapters = [createDefaultChapter(currentStoryId, 1)];
+      if (statusEl) {
+        statusEl.textContent = publish ? '🎉 Published!' : '✓ Draft saved to your account';
+        setTimeout(() => { if (statusEl) statusEl.textContent = 'All changes saved to your account'; }, 3000);
+      }
+      if (publish) {
+        alert(`Story "${title}" is now published and available on the homepage!`);
+        FableFlow.Navigation.navigateTo('home');
+      }
+    } catch (error) {
+      console.error('Could not save story', error);
+      if (statusEl) statusEl.textContent = 'Save failed. Please try again.';
+    }
+  }
+
   function addChapter() {
     saveActiveChapterInMemory();
     const nextNum = currentChapters.length + 1;
@@ -226,7 +274,7 @@ FableFlow.Editor = (function() {
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 6px; background-color: ${activeChapterIndex === idx ? 'var(--color-secondary)' : 'var(--bg-card)'}; color: ${activeChapterIndex === idx ? 'var(--color-primary)' : 'var(--text-main)'}; border: 1.5px solid var(--border-color); margin-bottom: 6px; cursor: pointer;"
            onclick="FableFlow.Editor.switchChapter(${idx})">
         <span style="font-size: 0.82rem; font-weight: ${activeChapterIndex === idx ? '800' : '600'};">
-          Ch. ${c.chapterNumber}: ${c.title}
+          Ch. ${c.chapterNumber}: ${escapeHtml(c.title)}
         </span>
         <button style="color: var(--color-accent); font-size: 0.8rem; font-weight: 800;" onclick="event.stopPropagation(); FableFlow.Editor.deleteChapter(${idx})" title="Delete chapter">✕</button>
       </div>
@@ -324,10 +372,10 @@ FableFlow.Editor = (function() {
     tray.innerHTML = aiSuggestions.map(s => `
       <div class="ai-suggestion-card" id="card-${s.id}">
         <div class="ai-suggestion-header">
-          <span>✨ ${s.title}</span>
+          <span>✨ ${escapeHtml(s.title)}</span>
           <span style="font-size: 0.65rem; color: var(--text-muted);">Demo Co-Pilot</span>
         </div>
-        <p style="font-size: 0.8rem; line-height: 1.4; white-space: pre-line; margin-bottom: 8px;">${s.text}</p>
+        <p style="font-size: 0.8rem; line-height: 1.4; white-space: pre-line; margin-bottom: 8px;">${escapeHtml(s.text)}</p>
         <div class="ai-suggestion-actions">
           <button class="btn-reject" onclick="FableFlow.Editor.rejectSuggestion('${s.id}')">Reject</button>
           <button class="btn-edit-sug" onclick="FableFlow.Editor.editSuggestion('${s.id}')">Edit</button>

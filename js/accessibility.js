@@ -23,6 +23,17 @@ FableFlow.Accessibility = (function() {
   };
 
   let preferences = { ...DEFAULT_PREFERENCES };
+  let remoteSaveTimer = null;
+
+  function scheduleRemoteSave() {
+    if (!FableFlow.Backend || !FableFlow.Backend.isRegisteredUser()) return;
+    clearTimeout(remoteSaveTimer);
+    remoteSaveTimer = setTimeout(() => {
+      FableFlow.Backend.savePreferences({ ...preferences }).catch(error => {
+        console.warn('Could not sync accessibility preferences', error);
+      });
+    }, 400);
+  }
 
   function init() {
     // 1. Load preferences from localStorage
@@ -45,7 +56,7 @@ FableFlow.Accessibility = (function() {
     bindControls();
   }
 
-  function applyTypography() {
+  function applyTypography(persist = true) {
     const root = document.documentElement;
     const fontCss = fontMap[preferences.fontFamily] || fontMap.lexend;
 
@@ -77,10 +88,13 @@ FableFlow.Accessibility = (function() {
     updateLivePreviews();
 
     // Persist
-    localStorage.setItem('fableflow_accessibility', JSON.stringify(preferences));
+    if (persist) {
+      localStorage.setItem('fableflow_accessibility', JSON.stringify(preferences));
+      scheduleRemoteSave();
+    }
   }
 
-  function applyTheme(theme) {
+  function applyTheme(theme, persist = true) {
     preferences.theme = theme;
     const root = document.documentElement;
     if (theme === 'dark') {
@@ -94,7 +108,10 @@ FableFlow.Accessibility = (function() {
       const icon = document.getElementById('theme-toggle-icon');
       if (icon) icon.textContent = '🌙';
     }
-    localStorage.setItem('fableflow_theme', theme);
+    if (persist) {
+      localStorage.setItem('fableflow_theme', theme);
+      scheduleRemoteSave();
+    }
   }
 
   function toggleTheme() {
@@ -122,6 +139,13 @@ FableFlow.Accessibility = (function() {
   function setWordSpacing(spacing) {
     preferences.wordSpacing = Number(spacing);
     applyTypography();
+  }
+
+  function setPreferences(nextPreferences, options = {}) {
+    preferences = { ...DEFAULT_PREFERENCES, ...preferences, ...(nextPreferences || {}) };
+    const persist = options.persist !== false;
+    applyTheme(preferences.theme, persist);
+    applyTypography(persist);
   }
 
   function updateLivePreviews() {
@@ -160,6 +184,7 @@ FableFlow.Accessibility = (function() {
     setFontSize,
     setLineSpacing,
     setWordSpacing,
+    setPreferences,
     applyTheme,
     toggleTheme,
     getPreferences: () => ({ ...preferences })

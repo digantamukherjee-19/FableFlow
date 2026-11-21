@@ -31,8 +31,15 @@ FableFlow.Stories = (function() {
   let selectedGenre = 'All';
   let searchQuery = '';
 
+  function escapeHtml(value) {
+    return FableFlow.Backend?.escapeHtml ? FableFlow.Backend.escapeHtml(value) : String(value ?? '');
+  }
+
+  function safeImageUrl(value) {
+    return FableFlow.Backend?.safeHttpUrl ? FableFlow.Backend.safeHttpUrl(value) : escapeHtml(value);
+  }
+
   function init() {
-    initDefaultData();
     bindHomeEvents();
     bindReaderEvents();
   }
@@ -276,6 +283,7 @@ The date stamped at the bottom was three years from today.`,
   }
 
   function getStories() {
+    if (FableFlow.Backend?.isReady()) return FableFlow.Backend.getStories();
     try {
       return JSON.parse(localStorage.getItem(STORIES_KEY) || '[]');
     } catch (e) {
@@ -284,6 +292,7 @@ The date stamped at the bottom was three years from today.`,
   }
 
   function getChapters(storyId) {
+    if (FableFlow.Backend?.isReady()) return FableFlow.Backend.getChapters(storyId);
     try {
       const all = JSON.parse(localStorage.getItem(CHAPTERS_KEY) || '[]');
       return all.filter(c => c.storyId === storyId).sort((a, b) => a.chapterNumber - b.chapterNumber);
@@ -293,6 +302,7 @@ The date stamped at the bottom was three years from today.`,
   }
 
   function getBookmarks() {
+    if (FableFlow.Backend?.isReady()) return FableFlow.Backend.getBookmarks();
     try {
       return JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]');
     } catch (e) {
@@ -305,7 +315,17 @@ The date stamped at the bottom was three years from today.`,
     return list.includes(storyId);
   }
 
-  function toggleBookmark(storyId) {
+  async function toggleBookmark(storyId) {
+    if (FableFlow.Backend?.isReady()) {
+      try {
+        const saved = await FableFlow.Backend.toggleBookmark(storyId);
+        renderHome();
+        return saved;
+      } catch (error) {
+        console.error('Could not save bookmark', error);
+        return false;
+      }
+    }
     let list = getBookmarks();
     if (list.includes(storyId)) {
       list = list.filter(id => id !== storyId);
@@ -318,6 +338,7 @@ The date stamped at the bottom was three years from today.`,
   }
 
   function getLikes() {
+    if (FableFlow.Backend?.isReady()) return FableFlow.Backend.getStoryLikes();
     try {
       return JSON.parse(localStorage.getItem(LIKES_KEY) || '[]');
     } catch (e) {
@@ -329,7 +350,8 @@ The date stamped at the bottom was three years from today.`,
     return getLikes().includes(storyId);
   }
 
-  function toggleLike(storyId) {
+  async function toggleLike(storyId) {
+    if (FableFlow.Backend?.isReady()) return FableFlow.Backend.toggleStoryLike(storyId);
     let list = getLikes();
     const stories = getStories();
     const story = stories.find(s => s.id === storyId);
@@ -348,6 +370,10 @@ The date stamped at the bottom was three years from today.`,
   }
 
   function saveReadingProgress(storyId, chapterNum) {
+    if (FableFlow.Backend?.isReady()) {
+      FableFlow.Backend.saveProgress(storyId, chapterNum).catch(error => console.error('Could not save reading progress', error));
+      return;
+    }
     try {
       const progress = {
         storyId,
@@ -359,6 +385,7 @@ The date stamped at the bottom was three years from today.`,
   }
 
   function getReadingProgress() {
+    if (FableFlow.Backend?.isReady()) return FableFlow.Backend.getProgress();
     try {
       const raw = localStorage.getItem(PROGRESS_KEY);
       return raw ? JSON.parse(raw) : null;
@@ -375,9 +402,9 @@ The date stamped at the bottom was three years from today.`,
     return `
       <div class="book-card" onclick="FableFlow.Navigation.navigateTo('story-detail', { id: '${story.id}' })">
         <div class="book-cover-wrap">
-          <img src="${story.coverImage}" alt="${story.title}" class="book-cover-img" loading="lazy" />
+          <img src="${safeImageUrl(story.coverImage)}" alt="${escapeHtml(story.title)}" class="book-cover-img" loading="lazy" />
           <div class="book-overlay-gradient"></div>
-          <span class="book-genre-badge">${story.genre}</span>
+          <span class="book-genre-badge">${escapeHtml(story.genre)}</span>
           <button class="book-bookmark-btn ${bookmarked ? 'bookmarked' : ''}" 
                   onclick="event.stopPropagation(); FableFlow.Stories.toggleBookmark('${story.id}')"
                   title="${bookmarked ? 'Remove Bookmark' : 'Add to Bookmarks'}">
@@ -389,9 +416,9 @@ The date stamped at the bottom was three years from today.`,
           </div>
         </div>
         <div class="book-card-body">
-          <h4 class="book-card-title">${story.title}</h4>
-          <p class="book-card-author">by ${story.authorName}</p>
-          <p class="book-card-desc">${story.description}</p>
+          <h4 class="book-card-title">${escapeHtml(story.title)}</h4>
+          <p class="book-card-author">by ${escapeHtml(story.authorName)}</p>
+          <p class="book-card-desc">${escapeHtml(story.description)}</p>
         </div>
       </div>
     `;
@@ -410,11 +437,11 @@ The date stamped at the bottom was three years from today.`,
         contCard.style.display = 'flex';
         contCard.innerHTML = `
           <div class="continue-reading-left">
-            <img src="${cStory.coverImage}" class="continue-reading-cover" alt="${cStory.title}" />
+            <img src="${safeImageUrl(cStory.coverImage)}" class="continue-reading-cover" alt="${escapeHtml(cStory.title)}" />
             <div class="continue-reading-meta">
               <span class="continue-reading-tag">Continue Reading • Chapter ${contProg.chapterNum}</span>
-              <h4 class="continue-reading-title">${cStory.title}</h4>
-              <p class="continue-reading-author">by ${cStory.authorName}</p>
+              <h4 class="continue-reading-title">${escapeHtml(cStory.title)}</h4>
+              <p class="continue-reading-author">by ${escapeHtml(cStory.authorName)}</p>
             </div>
           </div>
           <button class="btn-primary continue-reading-btn" onclick="FableFlow.Navigation.navigateTo('story-reader', { id: '${cStory.id}', ch: ${contProg.chapterNum} })">
@@ -504,8 +531,9 @@ The date stamped at the bottom was three years from today.`,
     const firstChapterNum = chapters[0]?.chapterNumber || 1;
 
     // Load comments
-    const allComments = JSON.parse(localStorage.getItem(COMMENTS_KEY) || '[]');
-    const storyComments = allComments.filter(c => c.storyId === storyId);
+    const storyComments = FableFlow.Backend?.isReady()
+      ? FableFlow.Backend.getComments(storyId)
+      : JSON.parse(localStorage.getItem(COMMENTS_KEY) || '[]').filter(c => c.storyId === storyId);
 
     container.innerHTML = `
       <div style="margin-bottom: 24px;">
@@ -516,7 +544,7 @@ The date stamped at the bottom was three years from today.`,
 
       <div class="card story-detail-grid">
         <div>
-          <img src="${story.coverImage}" class="story-detail-cover" alt="" />
+          <img src="${safeImageUrl(story.coverImage)}" class="story-detail-cover" alt="" />
           <div style="display: flex; gap: 8px; margin-top: 16px;">
             <button class="btn-secondary" style="flex: 1;" onclick="FableFlow.Stories.handleDetailLike('${story.id}')">
               ❤️ <span id="detail-likes-count">${story.likes || 0}</span> Votes
@@ -530,14 +558,14 @@ The date stamped at the bottom was three years from today.`,
         <div style="display: flex; flex-direction: column; gap: 14px;">
           <div>
             <span style="font-size: 0.75rem; font-weight: 800; color: var(--color-primary); text-transform: uppercase;">
-              ${story.genre}
+              ${escapeHtml(story.genre)}
             </span>
             <h1 style="font-size: 2rem; font-weight: 900; line-height: 1.2; margin: 4px 0 8px 0;">
-              ${story.title}
+              ${escapeHtml(story.title)}
             </h1>
             <p style="font-size: 0.85rem; color: var(--text-muted); cursor: pointer;" 
                onclick="FableFlow.Navigation.navigateTo('author-profile', { id: '${story.authorId}' })">
-              by <strong style="color: var(--text-main);">${story.authorName}</strong>
+              by <strong style="color: var(--text-main);">${escapeHtml(story.authorName)}</strong>
             </p>
           </div>
 
@@ -549,11 +577,11 @@ The date stamped at the bottom was three years from today.`,
 
           <div>
             <h4 style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Synopsis</h4>
-            <p style="font-size: 0.95rem; line-height: 1.6; white-space: pre-line;">${story.description}</p>
+            <p style="font-size: 0.95rem; line-height: 1.6; white-space: pre-line;">${escapeHtml(story.description)}</p>
           </div>
 
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            ${(story.tags || []).map(t => `<span style="font-size: 0.75rem; background: var(--bg-elevated); padding: 4px 10px; border-radius: 6px;">#${t}</span>`).join('')}
+            ${(story.tags || []).map(t => `<span style="font-size: 0.75rem; background: var(--bg-elevated); padding: 4px 10px; border-radius: 6px;">#${escapeHtml(t)}</span>`).join('')}
           </div>
 
           <div style="margin-top: 12px;">
@@ -573,7 +601,7 @@ The date stamped at the bottom was three years from today.`,
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 8px; background: var(--bg-elevated); cursor: pointer;"
                  onclick="FableFlow.Navigation.navigateTo('story-reader', { id: '${story.id}', ch: ${ch.chapterNumber} })">
               <div>
-                <strong style="font-size: 0.9rem;">Chapter ${ch.chapterNumber}: ${ch.title}</strong>
+                <strong style="font-size: 0.9rem;">Chapter ${ch.chapterNumber}: ${escapeHtml(ch.title)}</strong>
                 <p style="font-size: 0.75rem; color: var(--text-muted);">${ch.wordCount || 0} words</p>
               </div>
               <span style="font-size: 0.82rem; font-weight: 700; color: var(--color-primary);">Read →</span>
@@ -593,8 +621,8 @@ The date stamped at the bottom was three years from today.`,
         <div id="detail-comments-list" style="display: flex; flex-direction: column; gap: 12px;">
           ${storyComments.map(c => `
             <div style="padding: 12px; border-radius: 8px; background: var(--bg-elevated); font-size: 0.85rem;">
-              <strong style="color: var(--color-secondary);">${c.username}</strong>
-              <p style="margin-top: 4px; line-height: 1.4;">${c.content}</p>
+              <strong style="color: var(--color-secondary);">${escapeHtml(c.username)}</strong>
+              <p style="margin-top: 4px; line-height: 1.4;">${escapeHtml(c.content)}</p>
             </div>
           `).join('')}
         </div>
@@ -602,14 +630,16 @@ The date stamped at the bottom was three years from today.`,
     `;
   }
 
-  function handleDetailLike(storyId) {
-    const res = toggleLike(storyId);
+  async function handleDetailLike(storyId) {
+    const res = await toggleLike(storyId);
     const countEl = document.getElementById('detail-likes-count');
     if (countEl) countEl.textContent = res.likes;
+    const homeCard = document.querySelector(`[data-story-likes="${CSS.escape(storyId)}"]`);
+    if (homeCard) homeCard.textContent = res.likes;
   }
 
-  function handleDetailBookmark(storyId) {
-    const isNowBookmarked = toggleBookmark(storyId);
+  async function handleDetailBookmark(storyId) {
+    const isNowBookmarked = await toggleBookmark(storyId);
     const textEl = document.getElementById('detail-bookmark-text');
     if (textEl) textEl.textContent = isNowBookmarked ? 'Saved' : 'Save';
   }
@@ -625,22 +655,19 @@ The date stamped at the bottom was three years from today.`,
   function actuallyPostComment(storyId) {
     const input = document.getElementById('detail-comment-input');
     if (!input || !input.value.trim()) return;
+    const content = input.value.trim();
+    if (FableFlow.Backend?.isReady()) {
+      FableFlow.Backend.addComment(storyId, content).then(() => {
+        input.value = '';
+        renderStoryDetail(storyId);
+      }).catch(error => console.error('Could not post comment', error));
+      return;
+    }
 
     const user = FableFlow.Auth.getCurrentUser();
-    const username = user ? user.username : 'Reader_' + Math.floor(Math.random() * 900 + 100);
-
-    const newComment = {
-      id: `cmt_${Date.now()}`,
-      storyId,
-      username,
-      content: input.value.trim(),
-      createdAt: new Date().toISOString()
-    };
-
     const all = JSON.parse(localStorage.getItem(COMMENTS_KEY) || '[]');
-    all.unshift(newComment);
+    all.unshift({ id: `cmt_${Date.now()}`, storyId, username: user?.username || 'Reader', content, createdAt: new Date().toISOString() });
     localStorage.setItem(COMMENTS_KEY, JSON.stringify(all));
-
     input.value = '';
     renderStoryDetail(storyId);
   }
@@ -849,8 +876,8 @@ The date stamped at the bottom was three years from today.`,
             ← Overview
           </button>
           <div>
-            <h4 style="font-size: 0.85rem; font-weight: 800;">${story.title}</h4>
-            <span style="font-size: 0.75rem; color: var(--text-muted);">${currentChapter.title}</span>
+            <h4 style="font-size: 0.85rem; font-weight: 800;">${escapeHtml(story.title)}</h4>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(currentChapter.title)}</span>
           </div>
         </div>
 
@@ -868,9 +895,9 @@ The date stamped at the bottom was three years from today.`,
           <span style="font-size: 0.75rem; font-weight: 800; color: var(--color-primary); text-transform: uppercase;">
             Chapter ${currentChapter.chapterNumber}
           </span>
-          <h1 style="font-size: 2.2rem; font-weight: 900; margin: 8px 0;">${currentChapter.title}</h1>
+          <h1 style="font-size: 2.2rem; font-weight: 900; margin: 8px 0;">${escapeHtml(currentChapter.title)}</h1>
           <p style="font-size: 0.8rem; color: var(--text-muted);">
-            by ${story.authorName} • ~${Math.ceil((currentChapter.wordCount || 200) / 200)} min read
+            by ${escapeHtml(story.authorName)} • ~${Math.ceil((currentChapter.wordCount || 200) / 200)} min read
           </p>
         </div>
 
@@ -916,7 +943,7 @@ The date stamped at the bottom was three years from today.`,
         </div>
 
         <div class="reader-prose" id="reader-chapter-body">
-          ${currentChapter.content}
+          ${escapeHtml(currentChapter.content)}
         </div>
 
         <!-- Next / Prev Controls -->
@@ -1034,10 +1061,10 @@ The date stamped at the bottom was three years from today.`,
             ${myStories.map(st => `
               <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 8px; background: var(--bg-elevated); gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                  <img src="${st.coverImage}" style="width: 36px; height: 50px; border-radius: 4px; object-fit: cover;" alt="" />
+                  <img src="${safeImageUrl(st.coverImage)}" style="width: 36px; height: 50px; border-radius: 4px; object-fit: cover;" alt="" />
                   <div>
-                    <strong style="font-size: 0.9rem;">${st.title}</strong>
-                    <p style="font-size: 0.75rem; color: var(--text-muted);">${st.genre} • ${(st.reads || 0).toLocaleString()} reads • Status: <strong>${st.status}</strong></p>
+                    <strong style="font-size: 0.9rem;">${escapeHtml(st.title)}</strong>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(st.genre)} • ${(st.reads || 0).toLocaleString()} reads • Status: <strong>${escapeHtml(st.status)}</strong></p>
                   </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
@@ -1058,10 +1085,10 @@ The date stamped at the bottom was three years from today.`,
           ${currentlyReadingStory ? `
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-elevated); border-radius: 8px;">
               <div style="display: flex; align-items: center; gap: 12px;">
-                <img src="${currentlyReadingStory.coverImage}" style="width: 44px; height: 60px; border-radius: 4px; object-fit: cover;" alt="" />
+                <img src="${safeImageUrl(currentlyReadingStory.coverImage)}" style="width: 44px; height: 60px; border-radius: 4px; object-fit: cover;" alt="" />
                 <div>
-                  <strong>${currentlyReadingStory.title}</strong>
-                  <p style="font-size: 0.75rem; color: var(--text-muted);">Chapter ${contProg.chapterNum} • by ${currentlyReadingStory.authorName}</p>
+                  <strong>${escapeHtml(currentlyReadingStory.title)}</strong>
+                  <p style="font-size: 0.75rem; color: var(--text-muted);">Chapter ${contProg.chapterNum} • by ${escapeHtml(currentlyReadingStory.authorName)}</p>
                 </div>
               </div>
               <button class="btn-primary" onclick="FableFlow.Navigation.navigateTo('story-reader', { id: '${currentlyReadingStory.id}', ch: ${contProg.chapterNum} })">
@@ -1084,31 +1111,36 @@ The date stamped at the bottom was three years from today.`,
   // Render Author Profile
   function renderAuthorProfile(authorId) {
     const stories = getStories();
-    const authors = JSON.parse(localStorage.getItem('fableflow_users') || '[]');
-    const author = authors.find(u => u.id === authorId) || {
+    const profiles = FableFlow.Backend?.isReady() ? FableFlow.Backend.getProfiles() : JSON.parse(localStorage.getItem('fableflow_users') || '[]');
+    const profile = profiles.find(row => row.id === authorId);
+    const author = profile ? {
+      ...profile,
+      avatar: profile.avatar_url || profile.avatar,
+      followersCount: profile.id === 'usr_author_1' ? 1420 : profile.id === 'usr_author_2' ? 950 : 0
+    } : {
       id: authorId,
-      username: 'ElenaVance',
-      bio: 'Fantasy author & mythmaker.',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-      followersCount: 1420,
-      totalReads: 85200,
-      favouriteGenres: ['Fantasy', 'Adventure']
+      username: 'FableFlow Author',
+      bio: '',
+      avatar: ''
     };
 
     const authorStories = stories.filter(s => s.authorId === author.id);
+    author.totalReads = authorStories.reduce((total, story) => total + Number(story.reads || 0), 0);
     const container = document.getElementById('view-author-profile');
     if (!container) return;
 
-    const follows = JSON.parse(localStorage.getItem(FOLLOWS_KEY) || '[]');
+    const follows = FableFlow.Backend?.isReady()
+      ? FableFlow.Backend.getFollows()
+      : JSON.parse(localStorage.getItem(FOLLOWS_KEY) || '[]');
     const isFollowing = follows.includes(author.id);
 
     container.innerHTML = `
       <div class="card" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; margin-bottom: 32px;">
         <div style="display: flex; align-items: center; gap: 20px;">
-          <img src="${author.avatar}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color-primary);" alt="" />
+          <img src="${safeImageUrl(author.avatar)}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color-primary);" alt="" />
           <div>
-            <h2 style="font-size: 1.6rem; font-weight: 900;">${author.username}</h2>
-            <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 500px; margin-top: 4px;">${author.bio || ''}</p>
+            <h2 style="font-size: 1.6rem; font-weight: 900;">${escapeHtml(author.username)}</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 500px; margin-top: 4px;">${escapeHtml(author.bio || '')}</p>
             <div style="display: flex; gap: 16px; font-size: 0.8rem; margin-top: 8px;">
               <span><strong>${author.followersCount + (isFollowing ? 1 : 0)}</strong> Followers</span>
               <span><strong>${authorStories.length}</strong> Stories</span>
@@ -1123,7 +1155,7 @@ The date stamped at the bottom was three years from today.`,
       </div>
 
       <div class="section-header">
-        <h3 class="section-title">Stories by ${author.username}</h3>
+        <h3 class="section-title">Stories by ${escapeHtml(author.username)}</h3>
       </div>
       <div class="story-grid">
         ${authorStories.map(renderBookCard).join('')}
@@ -1139,7 +1171,16 @@ The date stamped at the bottom was three years from today.`,
     }
   }
 
-  function actuallyToggleFollowAuthor(authorId) {
+  async function actuallyToggleFollowAuthor(authorId) {
+    if (FableFlow.Backend?.isReady()) {
+      try {
+        await FableFlow.Backend.toggleFollow(authorId);
+        renderAuthorProfile(authorId);
+      } catch (error) {
+        console.error('Could not update author follow', error);
+      }
+      return;
+    }
     let follows = JSON.parse(localStorage.getItem(FOLLOWS_KEY) || '[]');
     if (follows.includes(authorId)) {
       follows = follows.filter(id => id !== authorId);

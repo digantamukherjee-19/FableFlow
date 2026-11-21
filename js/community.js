@@ -14,8 +14,11 @@ FableFlow.Community = (function() {
   let activeGuildId = 'comm_fantasy';
   let activeTab = 'chat';
 
+  function escapeHtml(value) {
+    return FableFlow.Backend?.escapeHtml ? FableFlow.Backend.escapeHtml(value) : String(value ?? '');
+  }
+
   function init() {
-    initDefaultData();
     bindEvents();
   }
 
@@ -102,10 +105,12 @@ FableFlow.Community = (function() {
   }
 
   function getGuilds() {
+    if (FableFlow.Backend?.isReady()) return FableFlow.Backend.getGuilds();
     return JSON.parse(localStorage.getItem(GUILDS_KEY) || '[]');
   }
 
   function getMemberships() {
+    if (FableFlow.Backend?.isReady()) return FableFlow.Backend.getMemberships();
     return JSON.parse(localStorage.getItem(MEMBERSHIPS_KEY) || '["comm_fantasy"]');
   }
 
@@ -121,6 +126,10 @@ FableFlow.Community = (function() {
   }
 
   function actuallyToggleJoinGuild(guildId) {
+    if (FableFlow.Backend?.isReady()) {
+      FableFlow.Backend.toggleMembership(guildId).then(render).catch(error => console.error('Could not update guild membership', error));
+      return;
+    }
     let list = getMemberships();
     if (list.includes(guildId)) {
       list = list.filter(id => id !== guildId);
@@ -145,8 +154,8 @@ FableFlow.Community = (function() {
           <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 8px; border: 1px solid ${active ? 'var(--color-primary)' : 'var(--border-color)'}; background: ${active ? 'var(--bg-card)' : 'var(--bg-elevated)'}; margin-bottom: 8px; cursor: pointer;"
                onclick="FableFlow.Community.selectGuild('${g.id}')">
             <div>
-              <span style="font-size: 0.68rem; font-weight: 800; color: var(--color-primary);">${g.genre}</span>
-              <h4 style="font-size: 0.88rem; font-weight: 800; margin-top: 2px;">${g.name}</h4>
+              <span style="font-size: 0.68rem; font-weight: 800; color: var(--color-primary);">${escapeHtml(g.genre)}</span>
+              <h4 style="font-size: 0.88rem; font-weight: 800; margin-top: 2px;">${escapeHtml(g.name)}</h4>
               <p style="font-size: 0.72rem; color: var(--text-muted);">${(g.memberCount).toLocaleString()} members</p>
             </div>
             <span style="font-size: 0.75rem; font-weight: 700; color: ${joined ? 'var(--color-primary)' : 'var(--text-muted)'};">
@@ -210,8 +219,9 @@ FableFlow.Community = (function() {
   }
 
   function renderChat(guildId) {
-    const all = JSON.parse(localStorage.getItem(CHAT_KEY) || '[]');
-    const guildMsgs = all.filter(m => m.guildId === guildId);
+    const guildMsgs = FableFlow.Backend?.isReady()
+      ? FableFlow.Backend.getGuildMessages(guildId)
+      : JSON.parse(localStorage.getItem(CHAT_KEY) || '[]').filter(m => m.guildId === guildId);
     const box = document.getElementById('community-chat-messages');
     if (!box) return;
 
@@ -223,9 +233,9 @@ FableFlow.Community = (function() {
       return `
         <div class="chat-bubble ${isMine ? 'mine' : 'theirs'}">
           <div style="font-size: 0.65rem; font-weight: 800; opacity: 0.8; margin-bottom: 2px;">
-            ${m.username} • ${m.time}
+            ${escapeHtml(m.username)} • ${escapeHtml(m.time)}
           </div>
-          <p>${m.content}</p>
+          <p>${escapeHtml(m.content)}</p>
         </div>
       `;
     }).join('');
@@ -242,6 +252,12 @@ FableFlow.Community = (function() {
   }
 
   function actuallySendChatMessage(text) {
+    if (FableFlow.Backend?.isReady()) {
+      FableFlow.Backend.sendMessage(activeGuildId, text.trim())
+        .then(() => renderChat(activeGuildId))
+        .catch(error => console.error('Could not send community message', error));
+      return;
+    }
     const user = FableFlow.Auth.getCurrentUser();
     const username = user ? user.username : 'Guest_' + Math.floor(Math.random() * 899 + 100);
 
@@ -286,6 +302,28 @@ FableFlow.Community = (function() {
     const box = document.getElementById('community-pane-challenges');
     if (!box) return;
 
+    if (FableFlow.Backend?.isReady()) {
+      const challenges = FableFlow.Backend.getChallenges();
+      const joinedIds = new Set(FableFlow.Backend.getChallengeIds());
+      box.innerHTML = `<div style="display: flex; flex-direction: column; gap: 16px;">${challenges.map(challenge => {
+        const joined = joinedIds.has(challenge.id);
+        const daysLeft = challenge.endsAt ? Math.max(0, Math.ceil((new Date(challenge.endsAt) - Date.now()) / 86400000)) : null;
+        return `
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 12px;">
+              <strong style="font-size: 0.95rem;">⚡ ${escapeHtml(challenge.title)}</strong>
+              ${daysLeft !== null ? `<span style="font-size: 0.72rem; color: var(--color-accent); font-weight: 700;">⏳ ${daysLeft} days left</span>` : ''}
+            </div>
+            <p style="font-size: 0.85rem; line-height: 1.5; color: var(--text-muted); background: var(--bg-card); border: 1.5px solid var(--border-color); padding: 12px; border-radius: 8px;">${escapeHtml(challenge.prompt)}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+            <span style="font-size: 0.75rem; color: var(--text-muted);">${Number(challenge.participantCount || 0).toLocaleString()} authors participating</span>
+              <button class="btn-primary" onclick="FableFlow.Community.acceptChallenge('${challenge.id}')">${joined ? '✓ Joined' : 'Accept Challenge'}</button>
+            </div>
+          </div>`;
+      }).join('')}</div>`;
+      return;
+    }
+
     box.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 16px;">
         <div class="card">
@@ -319,20 +357,33 @@ FableFlow.Community = (function() {
     `;
   }
 
-  function acceptChallenge(challengeName) {
-    if (window.FableFlow.Auth && !window.FableFlow.Auth.requireAuth('participate in writing challenges', () => {
-      alert(`Challenge accepted for "${challengeName}"! Head to the Writing Studio to draft your entry.`);
-    })) {
+  function acceptChallenge(challengeId) {
+    if (window.FableFlow.Auth && !window.FableFlow.Auth.requireAuth('participate in writing challenges', () => actuallyAcceptChallenge(challengeId))) return;
+    actuallyAcceptChallenge(challengeId);
+  }
+
+  async function actuallyAcceptChallenge(challengeId) {
+    if (FableFlow.Backend?.isReady()) {
+      try {
+        const added = await FableFlow.Backend.acceptChallenge(challengeId);
+        if (added) alert('Challenge accepted! Head to the Writing Studio to draft your entry.');
+        renderChallenges();
+      } catch (error) {
+        console.error('Could not accept challenge', error);
+      }
       return;
     }
-    alert(`Challenge accepted for "${challengeName}"! Head to the Writing Studio to draft your entry.`);
+    alert(`Challenge accepted for "${challengeId}"! Head to the Writing Studio to draft your entry.`);
   }
 
   function renderDiscussions() {
     const box = document.getElementById('community-pane-discussions');
     if (!box) return;
 
-    const posts = JSON.parse(localStorage.getItem(POSTS_KEY) || '[]');
+    const posts = FableFlow.Backend?.isReady()
+      ? FableFlow.Backend.getDiscussionPosts()
+      : JSON.parse(localStorage.getItem(POSTS_KEY) || '[]');
+    const likedPosts = FableFlow.Backend?.isReady() ? new Set(FableFlow.Backend.getDiscussionLikes()) : new Set();
 
     box.innerHTML = `
       <form onsubmit="event.preventDefault(); FableFlow.Community.addDiscussionPost();" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
@@ -344,11 +395,11 @@ FableFlow.Community = (function() {
       <div style="display: flex; flex-direction: column; gap: 12px;">
         ${posts.map(p => `
           <div class="card" style="padding: 16px;">
-            <span style="font-size: 0.75rem; color: var(--text-muted);">${p.author}</span>
-            <h4 style="font-size: 0.95rem; font-weight: 800; margin: 4px 0;">${p.title}</h4>
-            <p style="font-size: 0.82rem; line-height: 1.4; color: var(--text-main);">${p.content}</p>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(p.author)}</span>
+            <h4 style="font-size: 0.95rem; font-weight: 800; margin: 4px 0;">${escapeHtml(p.title)}</h4>
+            <p style="font-size: 0.82rem; line-height: 1.4; color: var(--text-main);">${escapeHtml(p.content)}</p>
             <div style="display: flex; gap: 16px; font-size: 0.75rem; color: var(--text-muted); margin-top: 10px;">
-              <span style="cursor: pointer;" onclick="FableFlow.Community.likePost('${p.id}')">❤️ ${p.likes} likes</span>
+              <span style="cursor: pointer;" onclick="FableFlow.Community.likePost('${p.id}')">${likedPosts.has(p.id) ? '💜' : '❤️'} ${p.likes} likes</span>
               <span>💬 ${p.commentsCount} replies</span>
             </div>
           </div>
@@ -368,6 +419,17 @@ FableFlow.Community = (function() {
     const titleInput = document.getElementById('community-newpost-title');
     const contentInput = document.getElementById('community-newpost-content');
     if (!titleInput || !contentInput || !titleInput.value.trim() || !contentInput.value.trim()) return;
+
+    if (FableFlow.Backend?.isReady()) {
+      FableFlow.Backend.addDiscussion(titleInput.value.trim(), contentInput.value.trim())
+        .then(() => {
+          titleInput.value = '';
+          contentInput.value = '';
+          renderDiscussions();
+        })
+        .catch(error => console.error('Could not post discussion', error));
+      return;
+    }
 
     const user = FableFlow.Auth.getCurrentUser();
     const newPost = {
@@ -389,6 +451,16 @@ FableFlow.Community = (function() {
   }
 
   function likePost(id) {
+    if (FableFlow.Backend?.isReady()) {
+      if (!FableFlow.Auth?.isRegisteredUser()) {
+        FableFlow.Auth?.showGuestPrompt('like community discussions');
+        return;
+      }
+      FableFlow.Backend.toggleDiscussionLike(id)
+        .then(renderDiscussions)
+        .catch(error => console.error('Could not update discussion like', error));
+      return;
+    }
     const posts = JSON.parse(localStorage.getItem(POSTS_KEY) || '[]');
     const p = posts.find(item => item.id === id);
     if (p) {
